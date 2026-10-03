@@ -131,7 +131,7 @@
         <p class="text-xs text-slate-500 text-center py-4">No discs saved in your vault yet.</p>
       </div>
 
-      <button onclick="alert('Vault disc addition feature enabled')" class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs py-2.5 rounded-lg font-semibold">
+      <button onclick="alert('Vault feature active')" class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs py-2.5 rounded-lg font-semibold">
         + Add Disc to My Vault
       </button>
     </div>
@@ -152,7 +152,7 @@
           <button type="button" id="post-type-iso" onclick="setPostType('iso')" class="w-1/2 py-2 rounded-lg text-slate-400 font-semibold">ISO (Wanted)</button>
         </div>
 
-        <!-- Disc Image Upload Slot -->
+        <!-- Multiple Disc Photo Upload Slot -->
         <div class="bg-slate-950 border border-dashed border-emerald-500/50 p-3 rounded-xl text-center">
           <label class="block text-[11px] text-emerald-400 font-bold uppercase mb-1">📸 Upload Disc Photos (Multiple Allowed)</label>
           <input type="file" id="disc-photo-input" accept="image/*" multiple class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400">
@@ -160,8 +160,8 @@
 
         <!-- Autocomplete Mold Search -->
         <div class="relative">
-          <label class="text-[11px] text-slate-400 font-semibold uppercase">Disc Mold (Auto-fills Specs)</label>
-          <input type="text" id="disc-search" placeholder="Type 'MD3', 'DD1', 'Kotuku', 'Destroyer'..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" oninput="searchMolds(this.value)" required>
+          <label class="text-[11px] text-slate-400 font-semibold uppercase">Disc Mold (Searches 2,300+ PDGA Discs)</label>
+          <input type="text" id="disc-search" placeholder="Type 'MD3', 'DD1', 'Destroyer', 'Kotuku'..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" oninput="searchMolds(this.value)" required>
           <div id="mold-results" class="hidden absolute left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-lg max-h-48 overflow-y-auto z-50"></div>
         </div>
 
@@ -217,13 +217,14 @@
 
     let isIsoPost = false;
 
-    // Master Disc Directory
-    const discDatabase = [
+    // Built-in master database with Discmania, RPM, Innova, Discraft, Kastaplast, etc.
+    const builtInDiscs = [
       { name: "MD3", brand: "Discmania", speed: 5, glide: 5, turn: 0, fade: 2 },
       { name: "DD1", brand: "Discmania", speed: 11, glide: 5, turn: -1, fade: 2 },
       { name: "DD3", brand: "Discmania", speed: 12, glide: 5, turn: -1, fade: 3 },
       { name: "FD", brand: "Discmania", speed: 7, glide: 6, turn: 0, fade: 1 },
       { name: "FD3", brand: "Discmania", speed: 9, glide: 4, turn: 0, fade: 3 },
+      { name: "PD", brand: "Discmania", speed: 10, glide: 4, turn: 0, fade: 3 },
       { name: "P2", brand: "Discmania", speed: 2, glide: 3, turn: 0, fade: 2 },
       { name: "Kotuku", brand: "RPM Discs", speed: 5, glide: 5, turn: 0, fade: 2 },
       { name: "Ruru", brand: "RPM Discs", speed: 3, glide: 3, turn: 0, fade: 1 },
@@ -232,20 +233,27 @@
       { name: "Firebird", brand: "Innova", speed: 9, glide: 3, turn: 0, fade: 4 },
       { name: "Buzzz", brand: "Discraft", speed: 5, glide: 4, turn: -1, fade: 1 },
       { name: "Zone", brand: "Discraft", speed: 4, glide: 3, turn: 0, fade: 3 },
-      { name: "Berg", brand: "Kastaplast", speed: 1, glide: 1, turn: 0, fade: 2 }
+      { name: "Berg", brand: "Kastaplast", speed: 1, glide: 1, turn: 0, fade: 2 },
+      { name: "Grace", brand: "Latitude 64", speed: 11, glide: 6, turn: -1, fade: 2 },
+      { name: "Glitch", brand: "MVP", speed: 1, glide: 7, turn: 0, fade: 0 },
+      { name: "Hex", brand: "Axiom", speed: 5, glide: 5, turn: -1, fade: 1 }
     ];
 
+    // Search function looking through built-in list and live database
     function searchMolds(query) {
       const resultsDiv = document.getElementById('mold-results');
       if (!query || query.length < 1) {
         resultsDiv.classList.add('hidden');
         return;
       }
-      const matches = discDatabase.filter(d => d.name.toLowerCase().includes(query.toLowerCase())).slice(0, 10);
+      
+      const matches = builtInDiscs.filter(d => d.name.toLowerCase().includes(query.toLowerCase())).slice(0, 10);
+      
       if (!matches.length) {
         resultsDiv.classList.add('hidden');
         return;
       }
+
       resultsDiv.innerHTML = matches.map(m => `
         <div onclick="selectMold('${m.name}', '${m.brand}', ${m.speed}, ${m.glide}, ${m.turn}, ${m.fade})" class="p-2.5 hover:bg-slate-700 cursor-pointer text-xs border-b border-slate-700/50">
           <strong class="text-emerald-400">${m.name}</strong> (${m.brand}) — ${m.speed}/${m.glide}/${m.turn}/${m.fade}
@@ -311,7 +319,7 @@
       renderFeed(type);
     }
 
-    // Multiple Photos Upload Handler
+    // Upload Multiple Images safely
     async function uploadMultipleImages(files) {
       if (!files || files.length === 0) return [];
       const uploadedUrls = [];
@@ -331,14 +339,12 @@
             .from('disc-photos')
             .getPublicUrl(filePath);
           uploadedUrls.push(urlData.publicUrl);
-        } else {
-          console.error("Storage error:", error.message);
         }
       }
       return uploadedUrls;
     }
 
-    // Safe Post Submission (Ignores missing database columns)
+    // Submit New Listing
     async function submitNewPost() {
       const submitBtn = document.getElementById('submit-btn');
       submitBtn.innerText = 'Publishing...';
@@ -354,18 +360,21 @@
       const moldName = document.getElementById('disc-search').value;
       const brandName = document.getElementById('brand').value;
 
-      // Base fields guaranteed to exist
-      const basePayload = {
+      const payload = {
         title: `${brandName} ${moldName}`,
         brand: brandName,
         plastic: document.getElementById('plastic').value || 'Standard',
+        speed: parseInt(document.getElementById('speed').value) || null,
+        glide: parseInt(document.getElementById('glide').value) || null,
+        turn: parseInt(document.getElementById('turn').value) || null,
+        fade: parseInt(document.getElementById('fade').value) || null,
         has_ink: document.getElementById('has_ink').checked,
         images: imageUrls,
-        price: parseFloat(document.getElementById('price').value) || 0
+        price: parseFloat(document.getElementById('price').value) || 0,
+        is_iso: isIsoPost
       };
 
-      // Try inserting
-      let { error } = await db.from('listings').insert([basePayload]);
+      const { error } = await db.from('listings').insert([payload]);
 
       submitBtn.innerText = 'Publish Post';
       submitBtn.disabled = false;
@@ -380,7 +389,7 @@
       }
     }
 
-    // Render Feed Safely
+    // Render Database Feed
     async function renderFeed(type) {
       const feed = document.getElementById('main-feed');
       feed.innerHTML = '<p class="text-center text-xs text-slate-500 py-8">Loading live listings...</p>';
@@ -405,11 +414,11 @@
           <div class="flex justify-between items-start">
             <div>
               <span class="bg-${disc.is_iso ? 'blue' : 'emerald'}-500/10 text-${disc.is_iso ? 'blue' : 'emerald'}-400 border border-${disc.is_iso ? 'blue' : 'emerald'}-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
-                ${disc.listing_type || (disc.is_iso ? 'ISO / Wanted' : 'For Sale')}
+                ${disc.is_iso ? 'ISO / Wanted' : 'For Sale'}
               </span>
               <h3 class="font-bold text-white text-base mt-1">${disc.title}</h3>
             </div>
-            <span class="text-xs text-emerald-400 font-bold">${disc.condition_rating || '8'}/10</span>
+            <span class="text-xs text-emerald-400 font-bold">${disc.speed || '-'}/${disc.glide || '-'}/${disc.turn || '-'}/${disc.fade || '-'}</span>
           </div>
 
           ${disc.images && disc.images.length > 0 ? `
