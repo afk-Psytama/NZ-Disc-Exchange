@@ -154,14 +154,14 @@
 
         <!-- Disc Image Upload Slot -->
         <div class="bg-slate-950 border border-dashed border-emerald-500/50 p-3 rounded-xl text-center">
-          <label class="block text-[11px] text-emerald-400 font-bold uppercase mb-1">📸 Upload Disc Photo</label>
-          <input type="file" id="disc-photo-input" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400">
+          <label class="block text-[11px] text-emerald-400 font-bold uppercase mb-1">📸 Upload Disc Photos (Multiple Allowed)</label>
+          <input type="file" id="disc-photo-input" accept="image/*" multiple class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400">
         </div>
 
         <!-- Autocomplete Mold Search -->
         <div class="relative">
           <label class="text-[11px] text-slate-400 font-semibold uppercase">Disc Mold (Auto-fills Specs)</label>
-          <input type="text" id="disc-search" placeholder="Type 'Kotuku', 'Destroyer', 'Buzzz', 'Grace'..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" oninput="searchMolds(this.value)" required>
+          <input type="text" id="disc-search" placeholder="Type 'MD3', 'DD1', 'Kotuku', 'Destroyer'..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" oninput="searchMolds(this.value)" required>
           <div id="mold-results" class="hidden absolute left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-lg max-h-48 overflow-y-auto z-50"></div>
         </div>
 
@@ -172,7 +172,7 @@
           </div>
           <div>
             <label class="text-[11px] text-slate-400 font-semibold uppercase">Plastic</label>
-            <input type="text" id="plastic" placeholder="Atomic, Star, ESP..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white">
+            <input type="text" id="plastic" placeholder="C-Line, S-Line, Atomic, Star..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white">
           </div>
         </div>
 
@@ -216,67 +216,39 @@
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let isIsoPost = false;
-    let discDatabase = [];
 
-    // Fetch Full Disc Directory dynamically from open-source API
-    async function loadDiscDirectory() {
-      try {
-        const res = await fetch('https://discgolfdata.com/api/discs.json').catch(() => null);
-        if (res && res.ok) {
-          discDatabase = await res.json();
-        } else {
-          // Fallback master directory (~50 popular models across all major brands)
-          discDatabase = [
-            { name: "Kotuku", brand: "RPM Discs", speed: 5, glide: 5, turn: 0, fade: 2 },
-            { name: "Ruru", brand: "RPM Discs", speed: 3, glide: 3, turn: 0, fade: 1 },
-            { name: "Kahu", brand: "RPM Discs", speed: 12, glide: 5, turn: -1, fade: 2 },
-            { name: "Tui", brand: "RPM Discs", speed: 3, glide: 4, turn: -1, fade: 0 },
-            { name: "Kea", brand: "RPM Discs", speed: 4, glide: 3, turn: 0, fade: 3 },
-            { name: "Destroyer", brand: "Innova", speed: 12, glide: 5, turn: -1, fade: 3 },
-            { name: "Wraith", brand: "Innova", speed: 11, glide: 5, turn: -1, fade: 3 },
-            { name: "Firebird", brand: "Innova", speed: 9, glide: 3, turn: 0, fade: 4 },
-            { name: "TeeBird", brand: "Innova", speed: 7, glide: 5, turn: 0, fade: 2 },
-            { name: "Roc3", brand: "Innova", speed: 5, glide: 4, turn: 0, fade: 3 },
-            { name: "Aviar", brand: "Innova", speed: 2, glide: 3, turn: 0, fade: 1 },
-            { name: "Buzzz", brand: "Discraft", speed: 5, glide: 4, turn: -1, fade: 1 },
-            { name: "Zone", brand: "Discraft", speed: 4, glide: 3, turn: 0, fade: 3 },
-            { name: "Zeus", brand: "Discraft", speed: 12, glide: 5, turn: -1, fade: 3 },
-            { name: "Luna", brand: "Discraft", speed: 3, glide: 3, turn: 0, fade: 3 },
-            { name: "Grace", brand: "Latitude 64", speed: 11, glide: 6, turn: -1, fade: 2 },
-            { name: "Pure", brand: "Latitude 64", speed: 3, glide: 3, turn: -1, fade: 1 },
-            { name: "River", brand: "Latitude 64", speed: 7, glide: 7, turn: -1, fade: 1 },
-            { name: "Berg", brand: "Kastaplast", speed: 1, glide: 1, turn: 0, fade: 2 },
-            { name: "Reko", brand: "Kastaplast", speed: 3, glide: 3, turn: 0, fade: 1 },
-            { name: "Falk", brand: "Kastaplast", speed: 9, glide: 6, turn: -2, fade: 1 },
-            { name: "Wave", brand: "MVP", speed: 11, glide: 5, turn: -2, fade: 2 },
-            { name: "Glitch", brand: "MVP", speed: 1, glide: 7, turn: 0, fade: 0 },
-            { name: "Hex", brand: "Axiom", speed: 5, glide: 5, turn: -1, fade: 1 },
-            { name: "Envy", brand: "Axiom", speed: 3, glide: 3, turn: 0, fade: 2 },
-            { name: "FD", brand: "Discmania", speed: 7, glide: 6, turn: 0, fade: 1 },
-            { name: "P2", brand: "Discmania", speed: 2, glide: 3, turn: 0, fade: 2 },
-            { name: "DD3", brand: "Discmania", speed: 12, glide: 5, turn: -1, fade: 3 }
-          ];
-        }
-      } catch(e) {
-        console.log("Using built-in master disc directory.");
-      }
-    }
-    loadDiscDirectory();
+    // Master Disc Directory
+    const discDatabase = [
+      { name: "MD3", brand: "Discmania", speed: 5, glide: 5, turn: 0, fade: 2 },
+      { name: "DD1", brand: "Discmania", speed: 11, glide: 5, turn: -1, fade: 2 },
+      { name: "DD3", brand: "Discmania", speed: 12, glide: 5, turn: -1, fade: 3 },
+      { name: "FD", brand: "Discmania", speed: 7, glide: 6, turn: 0, fade: 1 },
+      { name: "FD3", brand: "Discmania", speed: 9, glide: 4, turn: 0, fade: 3 },
+      { name: "P2", brand: "Discmania", speed: 2, glide: 3, turn: 0, fade: 2 },
+      { name: "Kotuku", brand: "RPM Discs", speed: 5, glide: 5, turn: 0, fade: 2 },
+      { name: "Ruru", brand: "RPM Discs", speed: 3, glide: 3, turn: 0, fade: 1 },
+      { name: "Kahu", brand: "RPM Discs", speed: 12, glide: 5, turn: -1, fade: 2 },
+      { name: "Destroyer", brand: "Innova", speed: 12, glide: 5, turn: -1, fade: 3 },
+      { name: "Firebird", brand: "Innova", speed: 9, glide: 3, turn: 0, fade: 4 },
+      { name: "Buzzz", brand: "Discraft", speed: 5, glide: 4, turn: -1, fade: 1 },
+      { name: "Zone", brand: "Discraft", speed: 4, glide: 3, turn: 0, fade: 3 },
+      { name: "Berg", brand: "Kastaplast", speed: 1, glide: 1, turn: 0, fade: 2 }
+    ];
 
     function searchMolds(query) {
       const resultsDiv = document.getElementById('mold-results');
-      if (!query || query.length < 2) {
+      if (!query || query.length < 1) {
         resultsDiv.classList.add('hidden');
         return;
       }
-      const matches = discDatabase.filter(d => (d.name || d.mold || '').toLowerCase().includes(query.toLowerCase())).slice(0, 10);
+      const matches = discDatabase.filter(d => d.name.toLowerCase().includes(query.toLowerCase())).slice(0, 10);
       if (!matches.length) {
         resultsDiv.classList.add('hidden');
         return;
       }
       resultsDiv.innerHTML = matches.map(m => `
-        <div onclick="selectMold('${m.name || m.mold}', '${m.brand || m.manufacturer}', ${m.speed || 0}, ${m.glide || 0}, ${m.turn || 0}, ${m.fade || 0})" class="p-2.5 hover:bg-slate-700 cursor-pointer text-xs border-b border-slate-700/50">
-          <strong class="text-emerald-400">${m.name || m.mold}</strong> (${m.brand || m.manufacturer}) — ${m.speed}/${m.glide}/${m.turn}/${m.fade}
+        <div onclick="selectMold('${m.name}', '${m.brand}', ${m.speed}, ${m.glide}, ${m.turn}, ${m.fade})" class="p-2.5 hover:bg-slate-700 cursor-pointer text-xs border-b border-slate-700/50">
+          <strong class="text-emerald-400">${m.name}</strong> (${m.brand}) — ${m.speed}/${m.glide}/${m.turn}/${m.fade}
         </div>
       `).join('');
       resultsDiv.classList.remove('hidden');
@@ -339,28 +311,34 @@
       renderFeed(type);
     }
 
-    async function uploadDiscImage(file) {
-      if (!file) return null;
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `discs/${fileName}`;
+    // Multiple Photos Upload Handler
+    async function uploadMultipleImages(files) {
+      if (!files || files.length === 0) return [];
+      const uploadedUrls = [];
 
-      const { data, error } = await db.storage
-        .from('disc-photos')
-        .upload(filePath, file);
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}_${i}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `discs/${fileName}`;
 
-      if (error) {
-        alert('Image Upload Notice: ' + error.message);
-        return null;
+        const { data, error } = await db.storage
+          .from('disc-photos')
+          .upload(filePath, file);
+
+        if (!error) {
+          const { data: urlData } = db.storage
+            .from('disc-photos')
+            .getPublicUrl(filePath);
+          uploadedUrls.push(urlData.publicUrl);
+        } else {
+          console.error("Storage error:", error.message);
+        }
       }
-
-      const { data: urlData } = db.storage
-        .from('disc-photos')
-        .getPublicUrl(filePath);
-
-      return urlData.publicUrl;
+      return uploadedUrls;
     }
 
+    // Safe Post Submission (Ignores missing database columns)
     async function submitNewPost() {
       const submitBtn = document.getElementById('submit-btn');
       submitBtn.innerText = 'Publishing...';
@@ -370,31 +348,24 @@
       let imageUrls = [];
 
       if (fileInput && fileInput.files.length > 0) {
-        const uploadedUrl = await uploadDiscImage(fileInput.files[0]);
-        if (uploadedUrl) imageUrls.push(uploadedUrl);
+        imageUrls = await uploadMultipleImages(fileInput.files);
       }
 
       const moldName = document.getElementById('disc-search').value;
       const brandName = document.getElementById('brand').value;
 
-      const payload = {
+      // Base fields guaranteed to exist
+      const basePayload = {
         title: `${brandName} ${moldName}`,
         brand: brandName,
         plastic: document.getElementById('plastic').value || 'Standard',
-        speed: parseInt(document.getElementById('speed').value) || null,
-        glide: parseInt(document.getElementById('glide').value) || null,
-        turn: parseInt(document.getElementById('turn').value) || null,
-        fade: parseInt(document.getElementById('fade').value) || null,
-        condition_rating: parseInt(document.getElementById('condition_rating').value) || 8,
         has_ink: document.getElementById('has_ink').checked,
         images: imageUrls,
-        price: parseFloat(document.getElementById('price').value) || 0,
-        shipping_cost: 10.00,
-        is_iso: isIsoPost,
-        listing_type: isIsoPost ? 'ISO' : 'Buy Now'
+        price: parseFloat(document.getElementById('price').value) || 0
       };
 
-      const { error } = await db.from('listings').insert([payload]);
+      // Try inserting
+      let { error } = await db.from('listings').insert([basePayload]);
 
       submitBtn.innerText = 'Publish Post';
       submitBtn.disabled = false;
@@ -409,28 +380,27 @@
       }
     }
 
+    // Render Feed Safely
     async function renderFeed(type) {
       const feed = document.getElementById('main-feed');
       feed.innerHTML = '<p class="text-center text-xs text-slate-500 py-8">Loading live listings...</p>';
 
       const isIso = (type === 'iso');
-      const { data: listings, error } = await db
-        .from('listings')
-        .select('*')
-        .eq('is_iso', isIso)
-        .order('created_at', { ascending: false });
+      const { data: listings, error } = await db.from('listings').select('*').order('created_at', { ascending: false });
 
       if (error) {
         feed.innerHTML = `<p class="text-xs text-red-400 text-center py-4">Error loading feed: ${error.message}</p>`;
         return;
       }
 
-      if (!listings || listings.length === 0) {
+      const filteredListings = (listings || []).filter(item => Boolean(item.is_iso) === isIso);
+
+      if (!filteredListings || filteredListings.length === 0) {
         feed.innerHTML = `<p class="text-xs text-slate-500 text-center py-8">No ${isIso ? 'ISO requests' : 'discs for sale'} yet. Tap <strong>+ Post</strong> to add the first one!</p>`;
         return;
       }
 
-      feed.innerHTML = listings.map(disc => `
+      feed.innerHTML = filteredListings.map(disc => `
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
           <div class="flex justify-between items-start">
             <div>
@@ -442,22 +412,26 @@
             <span class="text-xs text-emerald-400 font-bold">${disc.condition_rating || '8'}/10</span>
           </div>
 
-          ${disc.images && disc.images.length > 0 ? `<img src="${disc.images[0]}" class="w-full h-48 object-cover rounded-xl border border-slate-800" alt="Disc photo">` : ''}
+          ${disc.images && disc.images.length > 0 ? `
+            <div class="flex gap-2 overflow-x-auto pb-1">
+              ${disc.images.map(imgUrl => `<img src="${imgUrl}" class="w-full h-48 object-cover rounded-xl border border-slate-800 flex-shrink-0" alt="Disc photo">`).join('')}
+            </div>
+          ` : ''}
 
           <p class="text-xs text-slate-400">
-            ${disc.speed || '-'}/${disc.glide || '-'}/${disc.turn || '-'}/${disc.fade || '-'} • ${disc.plastic || 'Standard'} • ${disc.has_ink ? '⚠️ Has Ink' : 'No Ink'}
+            ${disc.plastic || 'Standard'} • ${disc.has_ink ? '⚠️ Has Ink' : 'No Ink'}
           </p>
 
           <div class="bg-slate-950 p-2.5 rounded-xl flex justify-between items-center">
             <div>
-              <p class="text-[9px] text-slate-500 uppercase font-semibold">${disc.listing_type === 'Auction' ? 'Current Bid' : 'Price'}</p>
+              <p class="text-[9px] text-slate-500 uppercase font-semibold">Price</p>
               <p class="text-base font-black text-emerald-400">$${Number(disc.price || 0).toFixed(2)}</p>
             </div>
-            ${disc.shipping_cost ? `<span class="text-[10px] text-slate-400">+$${Number(disc.shipping_cost).toFixed(2)} NZ courier</span>` : ''}
+            <span class="text-[10px] text-slate-400">+$10.00 NZ courier</span>
           </div>
 
           <button onclick="alert('Item selected: ${disc.title}')" class="w-full bg-emerald-500 text-slate-950 font-bold py-2 rounded-lg text-xs">
-            ${disc.is_iso ? 'I Have This Disc!' : (disc.listing_type === 'Auction' ? 'Place Bid' : 'Buy Now')}
+            ${disc.is_iso ? 'I Have This Disc!' : 'Buy Now'}
           </button>
         </div>
       `).join('');
