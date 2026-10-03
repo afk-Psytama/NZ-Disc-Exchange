@@ -1,586 +1,304 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>NZ Disc Golf Exchange</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    .tab-active { border-bottom: 2px solid #10b981; color: #10b981; font-weight: 700; }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen pb-24 font-sans">
+<body class="bg-slate-900 text-slate-100 min-h-screen">
 
-  <!-- Header -->
-  <header class="sticky top-0 bg-slate-900/95 backdrop-blur border-b border-slate-800 p-4 z-40 flex justify-between items-center">
-    <div>
-      <h1 class="text-lg font-black text-emerald-400 tracking-tight">NZ DISC GOLF <span class="text-slate-200">EXCHANGE</span></h1>
+  <!-- Navbar -->
+  <nav class="bg-slate-800 border-b border-slate-700 p-4 sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-bold text-emerald-400">🥏 NZ Disc Golf Exchange</h1>
+      <div id="auth-buttons" class="flex gap-2">
+        <button onclick="openAuthModal('signin')" class="px-4 py-2 text-sm bg-slate-700 hover:bg-slate-600 rounded-lg">Sign In</button>
+        <button onclick="openAuthModal('signup')" class="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 rounded-lg font-semibold">Sign Up</button>
+      </div>
+      <div id="user-menu" class="hidden flex items-center gap-3">
+        <span id="user-email-display" class="text-xs text-slate-400"></span>
+        <button onclick="openAccountModal()" class="px-3 py-1.5 text-sm bg-slate-700 hover:bg-slate-600 rounded-lg">Account</button>
+        <button onclick="handleSignOut()" class="px-3 py-1.5 text-sm bg-red-600/80 hover:bg-red-500 rounded-lg">Sign Out</button>
+      </div>
     </div>
-    
-    <div class="flex items-center gap-2">
-      <button onclick="toggleModal('account-modal')" class="bg-slate-800 border border-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
-        👤 <span id="account-btn-label">Account</span>
-      </button>
-
-      <button onclick="toggleModal('notification-modal')" class="relative bg-slate-800 border border-slate-700 p-2 rounded-xl text-slate-200">
-        🔔
-        <span id="notif-badge" class="absolute -top-1 -right-1 bg-emerald-500 text-slate-950 text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">1</span>
-      </button>
-
-      <button onclick="toggleModal('vault-modal')" class="bg-slate-800 border border-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg text-xs font-semibold">
-        My Vault
-      </button>
-      <button onclick="toggleModal('create-modal')" class="bg-emerald-500 text-slate-950 px-3 py-1.5 rounded-lg text-xs font-bold">
-        + Post
-      </button>
-    </div>
-  </header>
-
-  <!-- Feed Mode Switcher -->
-  <nav class="bg-slate-900 border-b border-slate-800 flex text-center text-xs text-slate-400 font-medium">
-    <button id="tab-market" onclick="switchFeed('market')" class="w-1/2 py-3 tab-active">Marketplace (For Sale/Trade)</button>
-    <button id="tab-iso" onclick="switchFeed('iso')" class="w-1/2 py-3">ISO / Wanted Feed</button>
   </nav>
 
-  <!-- Main Feed Container -->
-  <main class="max-w-md mx-auto p-4 space-y-4" id="main-feed">
-    <div class="text-center text-xs text-slate-500 py-8">Loading listings from database...</div>
+  <!-- Main Content -->
+  <main class="max-w-6xl mx-auto p-4 sm:p-6">
+    <!-- Header / Actions -->
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold">Active Listings</h2>
+      <button onclick="openNewListingModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-semibold">
+        + Create Listing
+      </button>
+    </div>
+
+    <!-- Listings Grid -->
+    <div id="listings-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <p class="text-slate-400 col-span-full">Loading listings...</p>
+    </div>
   </main>
 
-  <!-- MODAL: Account Settings -->
-  <div id="account-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 z-50">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 max-h-[85vh] overflow-y-auto mt-12 sm:mt-0 space-y-4">
-      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <div>
-          <h2 class="text-base font-bold text-white">Account & Profile Settings</h2>
-          <p class="text-[11px] text-slate-400">Manage defaults and preferences</p>
-        </div>
-        <button onclick="toggleModal('account-modal')" class="text-slate-400 text-lg">✕</button>
+  <!-- Auth Modal (Sign In / Sign Up) -->
+  <div id="auth-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl w-full max-w-md relative">
+      <button onclick="closeModal('auth-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">&times;</button>
+      
+      <!-- Tabs -->
+      <div class="flex border-b border-slate-700 mb-6">
+        <button id="tab-signin" onclick="switchAuthTab('signin')" class="flex-1 pb-3 text-center border-b-2 font-semibold">Sign In</button>
+        <button id="tab-signup" onclick="switchAuthTab('signup')" class="flex-1 pb-3 text-center border-b-2 font-semibold text-slate-400 border-transparent">Sign Up</button>
       </div>
 
-      <form id="account-form" onsubmit="event.preventDefault(); saveAccountProfile();" class="space-y-3">
-        <div>
-          <label class="text-[11px] text-slate-400 font-semibold uppercase">Full Name / Username</label>
-          <input type="text" id="acc-name" placeholder="e.g. Alex M." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" required>
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Email</label>
+            <input type="email" id="auth-email" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500" placeholder="you@example.com">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Password</label>
+            <input type="password" id="auth-password" required minlength="6" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500" placeholder="••••••••">
+          </div>
+          <div id="signup-extra-fields" class="hidden space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
+              <input type="text" id="auth-fullname" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500" placeholder="Jane Doe">
+            </div>
+          </div>
+          <p id="auth-error" class="text-xs text-red-400 hidden"></p>
+          <p id="auth-success" class="text-xs text-emerald-400 hidden"></p>
+          <button type="submit" id="auth-submit-btn" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-lg font-semibold text-sm transition">
+            Sign In
+          </button>
         </div>
-
-        <div>
-          <label class="text-[11px] text-slate-400 font-semibold uppercase">City / Town</label>
-          <input type="text" id="acc-city" placeholder="e.g. Wellington / Lower Hutt" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" required>
-        </div>
-
-        <div class="border-t border-slate-800 pt-3 space-y-2">
-          <label class="text-[11px] text-slate-400 font-semibold uppercase block">NZ Bank Details</label>
-          <input type="text" id="acc-bank" placeholder="12-3456-7890123-00" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500 font-mono">
-        </div>
-
-        <button type="submit" class="w-full bg-emerald-500 text-slate-950 font-bold py-2.5 rounded-lg text-xs">
-          Save Profile
-        </button>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: Notification Center -->
-  <div id="notification-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 z-50">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 max-h-[85vh] overflow-y-auto mt-12 sm:mt-0">
-      <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
+  <!-- Account Modal -->
+  <div id="account-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl w-full max-w-lg relative">
+      <button onclick="closeModal('account-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">&times;</button>
+      <h3 class="text-xl font-bold mb-4">Your Account Details</h3>
+      <form onsubmit="handleSaveProfile(event)" class="space-y-4">
         <div>
-          <h2 class="text-base font-bold text-white">Notifications</h2>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
+          <input type="text" id="acc-fullname" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm">
         </div>
-        <button onclick="toggleModal('notification-modal')" class="text-slate-400 text-lg">✕</button>
-      </div>
-
-      <div id="notifications-list" class="space-y-2">
-        <div onclick="openHandoverDetails('RPM Kotuku - Atomic', 18.00, 10.00, 'Marcus T.', '021-555-0192', 'marcus@example.com', '12-3456-7890123-00', 'DISC-8492'); markRead(this);" 
-             class="bg-slate-950 p-3 rounded-xl border border-emerald-500/40 hover:border-emerald-500 cursor-pointer transition relative">
-          <span class="absolute top-3 right-3 w-2 h-2 bg-emerald-500 rounded-full"></span>
-          <p class="text-xs font-bold text-emerald-400">🎉 You won an auction!</p>
-          <p class="text-[11px] text-slate-200 mt-0.5">RPM Kotuku — Tap to view seller details.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: Handover Details -->
-  <div id="handover-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 space-y-4">
-      <div class="flex justify-between items-start">
         <div>
-          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Order Confirmation</span>
-          <h3 class="text-base font-bold text-white mt-1" id="h-disc-title">RPM Kotuku</h3>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">City / Region</label>
+          <input type="text" id="acc-location" placeholder="e.g. Lower Hutt, Wellington" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm">
         </div>
-        <button onclick="toggleModal('handover-modal')" class="text-slate-400 text-lg">✕</button>
-      </div>
-
-      <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
-        <div class="flex justify-between text-xs text-slate-400"><span>Winning Price:</span><span class="text-white" id="h-price">$18.00</span></div>
-        <div class="flex justify-between text-xs text-slate-400"><span>Shipping:</span><span class="text-white" id="h-shipping">$10.00</span></div>
-        <div class="border-t border-slate-800 pt-2 flex justify-between text-sm font-bold"><span class="text-slate-200">Total:</span><span class="text-emerald-400" id="h-total">$28.00</span></div>
-      </div>
-
-      <div class="bg-emerald-950/30 border border-emerald-500/30 p-3.5 rounded-xl space-y-2">
-        <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Seller NZ Banking Details</h4>
-        <div class="text-xs space-y-1 text-slate-300">
-          <p><strong>Account Name:</strong> <span id="h-seller-name">Marcus T.</span></p>
-          <p class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800 font-mono text-emerald-400 text-xs font-bold">
-            <span id="h-bank-acc">12-3456-7890123-00</span>
-            <button onclick="navigator.clipboard.writeText(document.getElementById('h-bank-acc').innerText); alert('Copied!');" class="text-[10px] text-slate-400 uppercase font-sans">Copy</button>
-          </p>
-          <p><strong>Reference:</strong> <span class="text-amber-400 font-mono" id="h-ref">DISC-8492</span></p>
-        </div>
-      </div>
-
-      <button onclick="toggleModal('handover-modal')" class="w-full bg-slate-800 text-slate-200 font-bold py-2.5 rounded-lg text-xs">Close</button>
-    </div>
-  </div>
-
-  <!-- MODAL: My Vault -->
-  <div id="vault-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 max-h-[85vh] overflow-y-auto">
-      <div class="flex justify-between items-center mb-4">
         <div>
-          <h2 class="text-base font-bold text-white">My Vault Collection</h2>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Delivery Address <span class="text-slate-500">(Optional - for sellers to ship discs)</span></label>
+          <textarea id="acc-delivery" rows="2" placeholder="123 Street Name, Suburb, City" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm"></textarea>
         </div>
-        <button onclick="toggleModal('vault-modal')" class="text-slate-400 text-lg">✕</button>
-      </div>
-      <div id="vault-list" class="space-y-2 mb-4"><p class="text-xs text-slate-500 text-center py-4">No discs saved in your vault yet.</p></div>
-    </div>
-  </div>
-
-  <!-- MODAL: Create Post -->
-  <div id="create-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 max-h-[85vh] overflow-y-auto">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-base font-bold text-white">Create Listing</h2>
-        <button onclick="toggleModal('create-modal')" class="text-slate-400 text-lg">✕</button>
-      </div>
-
-      <form id="create-form" onsubmit="event.preventDefault(); submitNewPost();" class="space-y-3">
-        <!-- Post Type Switcher -->
-        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
-          <button type="button" id="post-type-sale" onclick="setPostType('sale')" class="w-1/2 py-2 rounded-lg bg-emerald-500 text-slate-950 font-bold">For Sale / Trade</button>
-          <button type="button" id="post-type-iso" onclick="setPostType('iso')" class="w-1/2 py-2 rounded-lg text-slate-400 font-semibold">ISO (Wanted)</button>
-        </div>
-
-        <!-- Photo Upload & Accumulator Area -->
-        <div class="bg-slate-950 border border-dashed border-emerald-500/50 p-3 rounded-xl text-center space-y-2">
-          <label class="block text-[11px] text-emerald-400 font-bold uppercase">📸 Upload Disc Photos</label>
-          
-          <input type="file" id="disc-photo-input" accept="image/*" multiple onchange="handleFileSelect(this)" class="hidden">
-          
-          <button type="button" onclick="document.getElementById('disc-photo-input').click()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition">
-            + Add Photos (1 or More)
-          </button>
-
-          <!-- Image Preview Thumbnail Grid -->
-          <div id="image-preview-grid" class="grid grid-cols-4 gap-2 pt-2 hidden"></div>
-        </div>
-
-        <!-- Autocomplete Mold Search -->
-        <div class="relative">
-          <label class="text-[11px] text-slate-400 font-semibold uppercase">Disc Mold</label>
-          <input type="text" id="disc-search" placeholder="Type 'MD3', 'Destroyer', 'Kotuku'..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" oninput="searchMolds(this.value)" required>
-          <div id="mold-results" class="hidden absolute left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-lg max-h-48 overflow-y-auto z-50"></div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="text-[11px] text-slate-400 font-semibold uppercase">Brand</label>
-            <input type="text" id="brand" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white" required>
-          </div>
-          <div>
-            <label class="text-[11px] text-slate-400 font-semibold uppercase">Plastic</label>
-            <input type="text" id="plastic" placeholder="Star, Atomic, C-Line..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white">
-          </div>
-        </div>
-
-        <!-- Location & Explicit Handover Option -->
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="text-[11px] text-slate-400 font-semibold uppercase">City / Town</label>
-            <input type="text" id="post-city" placeholder="e.g. Wellington" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white">
-          </div>
-          <div>
-            <label class="text-[11px] text-slate-400 font-semibold uppercase">Handover Option</label>
-            <select id="post-handover" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white">
-              <option value="both" selected>Both (Pickup & Shipping)</option>
-              <option value="pickup">Pickup Only</option>
-              <option value="shipping">Shipping Only</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Weight Section -->
-        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-2">
-          <div class="flex justify-between items-center">
-            <label class="text-[11px] text-slate-400 font-semibold uppercase">Weight (Grams)</label>
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <input type="checkbox" id="weight_unknown" onchange="toggleWeightUnknown(this.checked)" class="accent-emerald-500">
-              <span class="text-[11px] text-slate-400 font-medium">Weight Unknown</span>
-            </label>
-          </div>
-          <input type="number" id="weight_grams" min="100" max="200" placeholder="e.g. 175" class="w-full bg-slate-900 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500">
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="text-[11px] text-slate-400 font-semibold uppercase">Price ($ NZD)</label>
-            <input type="number" id="price" placeholder="25" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white" required>
-          </div>
-          <div>
-            <label class="text-[11px] text-slate-400 font-semibold uppercase">Condition (1-10)</label>
-            <input type="number" id="condition_rating" min="1" max="10" placeholder="8" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white">
-          </div>
-        </div>
-
-        <!-- Flight Specs -->
-        <div class="grid grid-cols-4 gap-1">
-          <div><label class="text-[9px] text-slate-400">SPD</label><input type="number" id="speed" class="w-full bg-slate-950 border border-slate-800 p-2 text-center rounded text-xs"></div>
-          <div><label class="text-[9px] text-slate-400">GLD</label><input type="number" id="glide" class="w-full bg-slate-950 border border-slate-800 p-2 text-center rounded text-xs"></div>
-          <div><label class="text-[9px] text-slate-400">TRN</label><input type="number" id="turn" class="w-full bg-slate-950 border border-slate-800 p-2 text-center rounded text-xs"></div>
-          <div><label class="text-[9px] text-slate-400">FAD</label><input type="number" id="fade" class="w-full bg-slate-950 border border-slate-800 p-2 text-center rounded text-xs"></div>
-        </div>
-
-        <!-- Ink Section -->
-        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" id="has_ink" class="accent-emerald-500">
-            <span class="text-xs font-semibold text-slate-300">Disc Has Ink / Markings</span>
-          </label>
-        </div>
-
-        <!-- Description Box -->
         <div>
-          <label class="text-[11px] text-slate-400 font-semibold uppercase">Description / Notes</label>
-          <textarea id="description" rows="3" placeholder="Dome/flatness, pickup locations..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500 mt-1"></textarea>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Bank Account Number <span class="text-slate-500">(Optional - for buyers to send payments)</span></label>
+          <input type="text" id="acc-bank" placeholder="12-3456-7890123-00" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm">
         </div>
-
-        <button type="submit" id="submit-btn" class="w-full bg-emerald-500 text-slate-950 font-bold py-3 rounded-lg text-xs transition mt-2">
-          Publish Post
-        </button>
+        <p id="acc-status" class="text-xs hidden"></p>
+        <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-lg font-semibold text-sm">Save Details</button>
       </form>
     </div>
   </div>
 
   <script>
-    const SUPABASE_URL = 'https://frmxicpmisjtyxiwhnad.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_FtS_bxdhmcK42S4ZGBCazg_WQsUASjp';
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Config: Replace with your actual Supabase credentials
+    const SUPABASE_URL = "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let isIsoPost = false;
-    let selectedFiles = [];
-    let userProfile = JSON.parse(localStorage.getItem('disc_user_profile') || '{}');
+    let activeAuthTab = 'signin';
+    let currentUser = null;
 
-    function loadProfileToUI() {
-      if (userProfile.name) {
-        document.getElementById('account-btn-label').innerText = userProfile.name;
-        document.getElementById('acc-name').value = userProfile.name || '';
-        document.getElementById('acc-city').value = userProfile.city || '';
-        document.getElementById('acc-bank').value = userProfile.bank || '';
-      }
-    }
+    // Check current session on load
+    async function init() {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+      fetchListings();
 
-    function saveAccountProfile() {
-      userProfile = {
-        name: document.getElementById('acc-name').value,
-        city: document.getElementById('acc-city').value,
-        bank: document.getElementById('acc-bank').value
-      };
-      localStorage.setItem('disc_user_profile', JSON.stringify(userProfile));
-      document.getElementById('account-btn-label').innerText = userProfile.name;
-      alert('Account details saved!');
-      toggleModal('account-modal');
-    }
-
-    const builtInDiscs = [
-      { name: "MD3", brand: "Discmania", speed: 5, glide: 5, turn: 0, fade: 2 },
-      { name: "DD1", brand: "Discmania", speed: 11, glide: 5, turn: -1, fade: 2 },
-      { name: "DD3", brand: "Discmania", speed: 12, glide: 5, turn: -1, fade: 3 },
-      { name: "FD", brand: "Discmania", speed: 7, glide: 6, turn: 0, fade: 1 },
-      { name: "Kotuku", brand: "RPM Discs", speed: 5, glide: 5, turn: 0, fade: 2 },
-      { name: "Ruru", brand: "RPM Discs", speed: 3, glide: 3, turn: 0, fade: 1 },
-      { name: "Kahu", brand: "RPM Discs", speed: 12, glide: 5, turn: -1, fade: 2 },
-      { name: "Destroyer", brand: "Innova", speed: 12, glide: 5, turn: -1, fade: 3 },
-      { name: "Firebird", brand: "Innova", speed: 9, glide: 3, turn: 0, fade: 4 },
-      { name: "Buzzz", brand: "Discraft", speed: 5, glide: 4, turn: -1, fade: 1 },
-      { name: "Zone", brand: "Discraft", speed: 4, glide: 3, turn: 0, fade: 3 },
-      { name: "Berg", brand: "Kastaplast", speed: 1, glide: 1, turn: 0, fade: 2 },
-      { name: "Grace", brand: "Latitude 64", speed: 11, glide: 6, turn: -1, fade: 2 },
-      { name: "Hex", brand: "Axiom", speed: 5, glide: 5, turn: -1, fade: 1 }
-    ];
-
-    function toggleWeightUnknown(isUnknown) {
-      const weightInput = document.getElementById('weight_grams');
-      if (isUnknown) {
-        weightInput.value = '';
-        weightInput.disabled = true;
-        weightInput.classList.add('opacity-50');
-      } else {
-        weightInput.disabled = false;
-        weightInput.classList.remove('opacity-50');
-      }
-    }
-
-    function handleFileSelect(input) {
-      if (input.files && input.files.length > 0) {
-        Array.from(input.files).forEach(file => selectedFiles.push(file));
-        input.value = '';
-        renderImagePreviews();
-      }
-    }
-
-    function renderImagePreviews() {
-      const previewGrid = document.getElementById('image-preview-grid');
-      previewGrid.innerHTML = '';
-
-      if (selectedFiles.length === 0) {
-        previewGrid.classList.add('hidden');
-        return;
-      }
-
-      previewGrid.classList.remove('hidden');
-
-      selectedFiles.forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const container = document.createElement('div');
-          container.className = 'relative group';
-          container.innerHTML = `
-            <img src="${e.target.result}" class="w-full h-16 object-cover rounded-lg border border-slate-700">
-            <button type="button" onclick="removePhoto(${index})" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-md">✕</button>
-          `;
-          previewGrid.appendChild(container);
-        };
-        reader.readAsDataURL(file);
+      supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user || null);
       });
     }
 
-    function removePhoto(index) {
-      selectedFiles.splice(index, 1);
-      renderImagePreviews();
-    }
-
-    function searchMolds(query) {
-      const resultsDiv = document.getElementById('mold-results');
-      if (!query || query.length < 1) {
-        resultsDiv.classList.add('hidden');
-        return;
-      }
-      const matches = builtInDiscs.filter(d => d.name.toLowerCase().includes(query.toLowerCase())).slice(0, 10);
-      if (!matches.length) {
-        resultsDiv.classList.add('hidden');
-        return;
-      }
-      resultsDiv.innerHTML = matches.map(m => `
-        <div onclick="selectMold('${m.name}', '${m.brand}', ${m.speed}, ${m.glide}, ${m.turn}, ${m.fade})" class="p-2.5 hover:bg-slate-700 cursor-pointer text-xs border-b border-slate-700/50">
-          <strong class="text-emerald-400">${m.name}</strong> (${m.brand}) — ${m.speed}/${m.glide}/${m.turn}/${m.fade}
-        </div>
-      `).join('');
-      resultsDiv.classList.remove('hidden');
-    }
-
-    function selectMold(name, brand, s, g, t, f) {
-      document.getElementById('disc-search').value = name;
-      document.getElementById('brand').value = brand;
-      document.getElementById('speed').value = s;
-      document.getElementById('glide').value = g;
-      document.getElementById('turn').value = t;
-      document.getElementById('fade').value = f;
-      document.getElementById('mold-results').classList.add('hidden');
-    }
-
-    function toggleModal(id) {
-      const modal = document.getElementById(id);
-      modal.classList.toggle('hidden');
-      if (id === 'create-modal' && !modal.classList.contains('hidden')) {
-        if (userProfile.city) document.getElementById('post-city').value = userProfile.city;
-      }
-    }
-
-    function setPostType(type) {
-      isIsoPost = (type === 'iso');
-      const btnSale = document.getElementById('post-type-sale');
-      const btnIso = document.getElementById('post-type-iso');
-      if (isIsoPost) {
-        btnIso.className = 'w-1/2 py-2 rounded-lg bg-blue-500 text-slate-950 font-bold';
-        btnSale.className = 'w-1/2 py-2 rounded-lg text-slate-400 font-semibold';
+    function setUser(user) {
+      currentUser = user;
+      const authBtns = document.getElementById('auth-buttons');
+      const userMenu = document.getElementById('user-menu');
+      if (user) {
+        authBtns.classList.add('hidden');
+        userMenu.classList.remove('hidden');
+        document.getElementById('user-email-display').innerText = user.email;
       } else {
-        btnSale.className = 'w-1/2 py-2 rounded-lg bg-emerald-500 text-slate-950 font-bold';
-        btnIso.className = 'w-1/2 py-2 rounded-lg text-slate-400 font-semibold';
+        authBtns.classList.remove('hidden');
+        userMenu.classList.add('hidden');
       }
     }
 
-    function markRead(el) {
-      el.classList.remove('border-emerald-500/40');
-      el.classList.add('border-slate-800', 'opacity-70');
-      const dot = el.querySelector('.bg-emerald-500');
-      if (dot) dot.remove();
-      document.getElementById('notif-badge').style.display = 'none';
-    }
+    // Auth Tab switching
+    function switchAuthTab(tab) {
+      activeAuthTab = tab;
+      const signinBtn = document.getElementById('tab-signin');
+      const signupBtn = document.getElementById('tab-signup');
+      const extraFields = document.getElementById('signup-extra-fields');
+      const submitBtn = document.getElementById('auth-submit-btn');
 
-    function openHandoverDetails(title, price, shipping, sellerName, sellerPhone, sellerEmail, bankAcc, ref) {
-      document.getElementById('h-disc-title').innerText = title;
-      document.getElementById('h-price').innerText = '$' + price.toFixed(2);
-      document.getElementById('h-shipping').innerText = '$' + shipping.toFixed(2);
-      document.getElementById('h-total').innerText = '$' + (price + shipping).toFixed(2);
-      document.getElementById('h-seller-name').innerText = sellerName;
-      document.getElementById('h-bank-acc').innerText = bankAcc;
-      document.getElementById('h-ref').innerText = ref;
-
-      document.getElementById('notification-modal').classList.add('hidden');
-      document.getElementById('handover-modal').classList.remove('hidden');
-    }
-
-    function switchFeed(type) {
-      document.getElementById('tab-market').className = type === 'market' ? 'w-1/2 py-3 tab-active' : 'w-1/2 py-3';
-      document.getElementById('tab-iso').className = type === 'iso' ? 'w-1/2 py-3 tab-active' : 'w-1/2 py-3';
-      renderFeed(type);
-    }
-
-    async function uploadMultipleImages(files) {
-      if (!files || files.length === 0) return [];
-      const uploadPromises = Array.from(files).map(async (file, index) => {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}_${index}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const filePath = `discs/${fileName}`;
-
-        const { data, error } = await db.storage.from('disc-photos').upload(filePath, file);
-        if (error) return null;
-
-        const { data: urlData } = db.storage.from('disc-photos').getPublicUrl(filePath);
-        return urlData.publicUrl;
-      });
-
-      const results = await Promise.all(uploadPromises);
-      return results.filter(url => url !== null);
-    }
-
-    async function submitNewPost() {
-      const submitBtn = document.getElementById('submit-btn');
-      submitBtn.innerText = 'Publishing Images & Post...';
-      submitBtn.disabled = true;
-
-      let imageUrls = [];
-      if (selectedFiles.length > 0) {
-        imageUrls = await uploadMultipleImages(selectedFiles);
+      if (tab === 'signin') {
+        signinBtn.className = "flex-1 pb-3 text-center border-b-2 font-semibold text-emerald-400 border-emerald-400";
+        signupBtn.className = "flex-1 pb-3 text-center border-b-2 font-semibold text-slate-400 border-transparent";
+        extraFields.classList.add('hidden');
+        submitBtn.innerText = "Sign In";
+      } else {
+        signupBtn.className = "flex-1 pb-3 text-center border-b-2 font-semibold text-emerald-400 border-emerald-400";
+        signinBtn.className = "flex-1 pb-3 text-center border-b-2 font-semibold text-slate-400 border-transparent";
+        extraFields.classList.remove('hidden');
+        submitBtn.innerText = "Sign Up & Send Confirmation";
       }
+    }
 
-      const moldName = document.getElementById('disc-search').value;
-      const brandName = document.getElementById('brand').value;
-      const weightVal = document.getElementById('weight_unknown').checked 
-        ? null 
-        : (parseInt(document.getElementById('weight_grams').value) || null);
+    function openAuthModal(tab = 'signin') {
+      switchAuthTab(tab);
+      document.getElementById('auth-modal').classList.remove('hidden');
+    }
 
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value;
+      const password = document.getElementById('auth-password').value;
+      const errEl = document.getElementById('auth-error');
+      const succEl = document.getElementById('auth-success');
+      errEl.classList.add('hidden');
+      succEl.classList.add('hidden');
+
+      if (activeAuthTab === 'signup') {
+        const fullName = document.getElementById('auth-fullname').value;
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: fullName } }
+        });
+
+        if (error) {
+          errEl.innerText = error.message;
+          errEl.classList.remove('hidden');
+        } else {
+          succEl.innerText = "Confirmation link sent to " + email + ". Please check your inbox and confirm to finish signing up!";
+          succEl.classList.remove('hidden');
+        }
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          errEl.innerText = error.message;
+          errEl.classList.remove('hidden');
+        } else {
+          closeModal('auth-modal');
+        }
+      }
+    }
+
+    async function handleSignOut() {
+      await supabase.auth.signOut();
+    }
+
+    // Account Modal logic
+    async function openAccountModal() {
+      if (!currentUser) return;
+      document.getElementById('account-modal').classList.remove('hidden');
+
+      // Fetch existing profile
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+
+      if (data) {
+        document.getElementById('acc-fullname').value = data.full_name || '';
+        document.getElementById('acc-location').value = data.location || '';
+        document.getElementById('acc-delivery').value = data.delivery_address || '';
+        document.getElementById('acc-bank').value = data.bank_account || '';
+      }
+    }
+
+    async function handleSaveProfile(e) {
+      e.preventDefault();
+      const status = document.getElementById('acc-status');
+      
       const payload = {
-        title: `${brandName} ${moldName}`,
-        brand: brandName,
-        plastic: document.getElementById('plastic').value || 'Standard',
-        city_town: document.getElementById('post-city').value || userProfile.city || 'NZ Wide',
-        shipping_option: document.getElementById('post-handover').value,
-        weight_grams: weightVal,
-        condition_rating: parseInt(document.getElementById('condition_rating').value) || null,
-        speed: parseInt(document.getElementById('speed').value) || null,
-        glide: parseInt(document.getElementById('glide').value) || null,
-        turn: parseInt(document.getElementById('turn').value) || null,
-        fade: parseInt(document.getElementById('fade').value) || null,
-        has_ink: document.getElementById('has_ink').checked,
-        description: document.getElementById('description').value || '',
-        images: imageUrls,
-        price: parseFloat(document.getElementById('price').value) || 0,
-        is_iso: isIsoPost
+        id: currentUser.id,
+        full_name: document.getElementById('acc-fullname').value,
+        location: document.getElementById('acc-location').value,
+        delivery_address: document.getElementById('acc-delivery').value,
+        bank_account: document.getElementById('acc-bank').value,
+        updated_at: new Date()
       };
 
-      const { error } = await db.from('listings').insert([payload]);
-
-      submitBtn.innerText = 'Publish Post';
-      submitBtn.disabled = false;
+      const { error } = await supabase.from('profiles').upsert(payload);
 
       if (error) {
-        alert('Failed to publish post: ' + error.message);
+        status.innerText = "Error: " + error.message;
+        status.className = "text-xs text-red-400";
       } else {
-        alert('Post published successfully!');
-        document.getElementById('create-form').reset();
-        selectedFiles = [];
-        renderImagePreviews();
-        toggleWeightUnknown(false);
-        toggleModal('create-modal');
-        renderFeed(isIsoPost ? 'iso' : 'market');
+        status.innerText = "Profile updated successfully!";
+        status.className = "text-xs text-emerald-400";
+        setTimeout(() => closeModal('account-modal'), 1200);
       }
+      status.classList.remove('hidden');
     }
 
-    async function renderFeed(type) {
-      const feed = document.getElementById('main-feed');
-      feed.innerHTML = '<p class="text-center text-xs text-slate-500 py-8">Loading live listings...</p>';
+    // Fetch listings placeholder
+    async function fetchListings() {
+      const grid = document.getElementById('listings-grid');
+      const { data, error } = await supabase.from('listings').select('*').order('created_at', { ascending: false });
 
-      const isIso = (type === 'iso');
-      const { data: listings, error } = await db.from('listings').select('*').order('created_at', { ascending: false });
-
-      if (error) {
-        feed.innerHTML = `<p class="text-xs text-red-400 text-center py-4">Error loading feed: ${error.message}</p>`;
+      if (error || !data || data.length === 0) {
+        grid.innerHTML = `<p class="text-slate-400 col-span-full">No listings available yet.</p>`;
         return;
       }
 
-      const filteredListings = (listings || []).filter(item => Boolean(item.is_iso) === isIso);
-
-      if (!filteredListings || filteredListings.length === 0) {
-        feed.innerHTML = `<p class="text-xs text-slate-500 text-center py-8">No ${isIso ? 'ISO requests' : 'discs for sale'} yet.</p>`;
-        return;
-      }
-
-      feed.innerHTML = filteredListings.map(disc => `
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
-          <div class="flex justify-between items-start">
-            <div>
-              <span class="bg-${disc.is_iso ? 'blue' : 'emerald'}-500/10 text-${disc.is_iso ? 'blue' : 'emerald'}-400 border border-${disc.is_iso ? 'blue' : 'emerald'}-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
-                ${disc.is_iso ? 'ISO / Wanted' : 'For Sale'}
-              </span>
-              <h3 class="font-bold text-white text-base mt-1">${disc.title}</h3>
-            </div>
-            <span class="text-xs text-emerald-400 font-bold">${disc.speed || '-'}/${disc.glide || '-'}/${disc.turn || '-'}/${disc.fade || '-'}</span>
+      grid.innerHTML = data.map(item => `
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col justify-between">
+          <div>
+            <h3 class="font-bold text-lg">${item.title}</h3>
+            <p class="text-xs text-slate-400 mb-2">${item.brand || ''} • ${item.weight || ''}g</p>
+            <p class="text-sm text-slate-300 mb-4">${item.description || ''}</p>
           </div>
-
-          ${disc.images && disc.images.length > 0 ? `
-            <div class="flex gap-2 overflow-x-auto pb-1 snap-x">
-              ${disc.images.map(imgUrl => `<img src="${imgUrl}" class="w-full max-w-[280px] h-48 object-cover rounded-xl border border-slate-800 flex-shrink-0 snap-center" alt="Disc photo">`).join('')}
-            </div>
-          ` : ''}
-
-          <div class="flex flex-wrap gap-2 text-xs text-slate-400">
-            <span>${disc.plastic || 'Standard'}</span>
-            <span>•</span>
-            <span>${disc.weight_grams ? disc.weight_grams + 'g' : 'Weight Unknown'}</span>
-            <span>•</span>
-            <span>${disc.condition_rating ? 'Cond: ' + disc.condition_rating + '/10' : 'Condition N/A'}</span>
-            <span>•</span>
-            <span>${disc.has_ink ? '⚠️ Has Ink' : 'No Ink'}</span>
+          <div class="flex justify-between items-center border-t border-slate-700 pt-3">
+            <span class="text-emerald-400 font-bold">$${item.price || 0}</span>
+            <button onclick="checkBidAuth()" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-xs rounded">Place Bid / Contact</button>
           </div>
-
-          <div class="text-[11px] text-slate-400 flex justify-between items-center bg-slate-950/40 p-2 rounded-lg border border-slate-800/50">
-            <span>📍 ${disc.city_town || 'NZ Wide'}</span>
-            <span class="capitalize">🚚 ${disc.shipping_option || 'both'}</span>
-          </div>
-
-          ${disc.description ? `<p class="text-xs text-slate-300 bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80 leading-relaxed">${disc.description}</p>` : ''}
-
-          <div class="bg-slate-950 p-2.5 rounded-xl flex justify-between items-center">
-            <div>
-              <p class="text-[9px] text-slate-500 uppercase font-semibold">Price</p>
-              <p class="text-base font-black text-emerald-400">$${Number(disc.price || 0).toFixed(2)}</p>
-            </div>
-            <span class="text-[10px] text-slate-400">+$10.00 NZ courier</span>
-          </div>
-
-          <button onclick="alert('Item selected: ${disc.title}')" class="w-full bg-emerald-500 text-slate-950 font-bold py-2 rounded-lg text-xs">
-            ${disc.is_iso ? 'I Have This Disc!' : 'Buy Now'}
-          </button>
         </div>
       `).join('');
     }
 
-    loadProfileToUI();
-    renderFeed('market');
+    function checkBidAuth() {
+      if (!currentUser) {
+        alert("Please sign in or sign up (and confirm your email) to bid or message sellers.");
+        openAuthModal('signin');
+      } else {
+        alert("You are authenticated! Bidding / messaging enabled.");
+      }
+    }
+
+    function openNewListingModal() {
+      if (!currentUser) {
+        alert("Please sign in to create a listing.");
+        openAuthModal('signin');
+      } else {
+        alert("Create listing form modal opens here.");
+      }
+    }
+
+    init();
   </script>
 </body>
 </html>
