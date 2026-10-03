@@ -160,7 +160,7 @@
 
         <!-- Autocomplete Mold Search -->
         <div class="relative">
-          <label class="text-[11px] text-slate-400 font-semibold uppercase">Disc Mold (Searches 2,300+ PDGA Discs)</label>
+          <label class="text-[11px] text-slate-400 font-semibold uppercase">Disc Mold (Searches Master Database)</label>
           <input type="text" id="disc-search" placeholder="Type 'MD3', 'DD1', 'Destroyer', 'Kotuku'..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" oninput="searchMolds(this.value)" required>
           <div id="mold-results" class="hidden absolute left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-lg max-h-48 overflow-y-auto z-50"></div>
         </div>
@@ -217,7 +217,6 @@
 
     let isIsoPost = false;
 
-    // Built-in master database with Discmania, RPM, Innova, Discraft, Kastaplast, etc.
     const builtInDiscs = [
       { name: "MD3", brand: "Discmania", speed: 5, glide: 5, turn: 0, fade: 2 },
       { name: "DD1", brand: "Discmania", speed: 11, glide: 5, turn: -1, fade: 2 },
@@ -239,7 +238,6 @@
       { name: "Hex", brand: "Axiom", speed: 5, glide: 5, turn: -1, fade: 1 }
     ];
 
-    // Search function looking through built-in list and live database
     function searchMolds(query) {
       const resultsDiv = document.getElementById('mold-results');
       if (!query || query.length < 1) {
@@ -319,7 +317,6 @@
       renderFeed(type);
     }
 
-    // Upload Multiple Images safely
     async function uploadMultipleImages(files) {
       if (!files || files.length === 0) return [];
       const uploadedUrls = [];
@@ -344,7 +341,6 @@
       return uploadedUrls;
     }
 
-    // Submit New Listing
     async function submitNewPost() {
       const submitBtn = document.getElementById('submit-btn');
       submitBtn.innerText = 'Publishing...';
@@ -389,7 +385,6 @@
       }
     }
 
-    // Render Database Feed
     async function renderFeed(type) {
       const feed = document.getElementById('main-feed');
       feed.innerHTML = '<p class="text-center text-xs text-slate-500 py-8">Loading live listings...</p>';
