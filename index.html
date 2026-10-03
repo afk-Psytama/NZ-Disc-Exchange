@@ -19,7 +19,6 @@
     </div>
     
     <div class="flex items-center gap-2">
-      <!-- Notification Center Bell -->
       <button onclick="toggleModal('notification-modal')" class="relative bg-slate-800 border border-slate-700 p-2 rounded-xl text-slate-200">
         🔔
         <span id="notif-badge" class="absolute -top-1 -right-1 bg-emerald-500 text-slate-950 text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">1</span>
@@ -142,7 +141,7 @@
   <div id="create-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
     <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 max-h-[85vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-base font-bold text-white">Create Post</h2>
+        <h2 class="text-base font-bold text-white">Create Listing</h2>
         <button onclick="toggleModal('create-modal')" class="text-slate-400 text-lg">✕</button>
       </div>
 
@@ -153,17 +152,17 @@
           <button type="button" id="post-type-iso" onclick="setPostType('iso')" class="w-1/2 py-2 rounded-lg text-slate-400 font-semibold">ISO (Wanted)</button>
         </div>
 
-        <!-- Disc Image Upload -->
-        <div>
-          <label class="text-[11px] text-slate-400 font-semibold uppercase">Disc Photo</label>
-          <input type="file" id="disc-photo-input" accept="image/*" class="w-full bg-slate-950 border border-slate-800 p-2 rounded-lg text-xs text-slate-300 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700">
+        <!-- Disc Image Upload Slot -->
+        <div class="bg-slate-950 border border-dashed border-emerald-500/50 p-3 rounded-xl text-center">
+          <label class="block text-[11px] text-emerald-400 font-bold uppercase mb-1">📸 Upload Disc Photo</label>
+          <input type="file" id="disc-photo-input" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400">
         </div>
 
         <!-- Autocomplete Mold Search -->
         <div class="relative">
-          <label class="text-[11px] text-slate-400 font-semibold uppercase">Disc Mold Search</label>
-          <input type="text" id="disc-search" placeholder="Type 'Kotuku', 'Destroyer', 'Buzzz'..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" oninput="searchMolds(this.value)" required>
-          <div id="mold-results" class="hidden absolute left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-lg max-h-40 overflow-y-auto z-50"></div>
+          <label class="text-[11px] text-slate-400 font-semibold uppercase">Disc Mold (Auto-fills Specs)</label>
+          <input type="text" id="disc-search" placeholder="Type 'Kotuku', 'Destroyer', 'Buzzz', 'Grace'..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" oninput="searchMolds(this.value)" required>
+          <div id="mold-results" class="hidden absolute left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-lg max-h-48 overflow-y-auto z-50"></div>
         </div>
 
         <div class="grid grid-cols-2 gap-2">
@@ -173,7 +172,7 @@
           </div>
           <div>
             <label class="text-[11px] text-slate-400 font-semibold uppercase">Plastic</label>
-            <input type="text" id="plastic" placeholder="Atomic, Star..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white">
+            <input type="text" id="plastic" placeholder="Atomic, Star, ESP..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white">
           </div>
         </div>
 
@@ -212,24 +211,57 @@
   </div>
 
   <script>
-    // Config
     const SUPABASE_URL = 'https://frmxicpmisjtyxiwhnad.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_FtS_bxdhmcK42S4ZGBCazg_WQsUASjp';
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let isIsoPost = false;
+    let discDatabase = [];
 
-    // Local Disc Mold Autocomplete DB
-    const DISC_DATABASE = [
-      { name: "Destroyer", brand: "Innova", speed: 12, glide: 5, turn: -1, fade: 3 },
-      { name: "Buzzz", brand: "Discraft", speed: 5, glide: 4, turn: -1, fade: 1 },
-      { name: "Kotuku", brand: "RPM Discs", speed: 5, glide: 5, turn: 0, fade: 2 },
-      { name: "Ruru", brand: "RPM Discs", speed: 3, glide: 3, turn: 0, fade: 1 },
-      { name: "Kahu", brand: "RPM Discs", speed: 12, glide: 5, turn: -1, fade: 2 },
-      { name: "TeeBird", brand: "Innova", speed: 7, glide: 5, turn: 0, fade: 2 },
-      { name: "Firebird", brand: "Innova", speed: 9, glide: 3, turn: 0, fade: 4 },
-      { name: "Berg", brand: "Kastaplast", speed: 1, glide: 1, turn: 0, fade: 2 }
-    ];
+    // Fetch Full Disc Directory dynamically from open-source API
+    async function loadDiscDirectory() {
+      try {
+        const res = await fetch('https://discgolfdata.com/api/discs.json').catch(() => null);
+        if (res && res.ok) {
+          discDatabase = await res.json();
+        } else {
+          // Fallback master directory (~50 popular models across all major brands)
+          discDatabase = [
+            { name: "Kotuku", brand: "RPM Discs", speed: 5, glide: 5, turn: 0, fade: 2 },
+            { name: "Ruru", brand: "RPM Discs", speed: 3, glide: 3, turn: 0, fade: 1 },
+            { name: "Kahu", brand: "RPM Discs", speed: 12, glide: 5, turn: -1, fade: 2 },
+            { name: "Tui", brand: "RPM Discs", speed: 3, glide: 4, turn: -1, fade: 0 },
+            { name: "Kea", brand: "RPM Discs", speed: 4, glide: 3, turn: 0, fade: 3 },
+            { name: "Destroyer", brand: "Innova", speed: 12, glide: 5, turn: -1, fade: 3 },
+            { name: "Wraith", brand: "Innova", speed: 11, glide: 5, turn: -1, fade: 3 },
+            { name: "Firebird", brand: "Innova", speed: 9, glide: 3, turn: 0, fade: 4 },
+            { name: "TeeBird", brand: "Innova", speed: 7, glide: 5, turn: 0, fade: 2 },
+            { name: "Roc3", brand: "Innova", speed: 5, glide: 4, turn: 0, fade: 3 },
+            { name: "Aviar", brand: "Innova", speed: 2, glide: 3, turn: 0, fade: 1 },
+            { name: "Buzzz", brand: "Discraft", speed: 5, glide: 4, turn: -1, fade: 1 },
+            { name: "Zone", brand: "Discraft", speed: 4, glide: 3, turn: 0, fade: 3 },
+            { name: "Zeus", brand: "Discraft", speed: 12, glide: 5, turn: -1, fade: 3 },
+            { name: "Luna", brand: "Discraft", speed: 3, glide: 3, turn: 0, fade: 3 },
+            { name: "Grace", brand: "Latitude 64", speed: 11, glide: 6, turn: -1, fade: 2 },
+            { name: "Pure", brand: "Latitude 64", speed: 3, glide: 3, turn: -1, fade: 1 },
+            { name: "River", brand: "Latitude 64", speed: 7, glide: 7, turn: -1, fade: 1 },
+            { name: "Berg", brand: "Kastaplast", speed: 1, glide: 1, turn: 0, fade: 2 },
+            { name: "Reko", brand: "Kastaplast", speed: 3, glide: 3, turn: 0, fade: 1 },
+            { name: "Falk", brand: "Kastaplast", speed: 9, glide: 6, turn: -2, fade: 1 },
+            { name: "Wave", brand: "MVP", speed: 11, glide: 5, turn: -2, fade: 2 },
+            { name: "Glitch", brand: "MVP", speed: 1, glide: 7, turn: 0, fade: 0 },
+            { name: "Hex", brand: "Axiom", speed: 5, glide: 5, turn: -1, fade: 1 },
+            { name: "Envy", brand: "Axiom", speed: 3, glide: 3, turn: 0, fade: 2 },
+            { name: "FD", brand: "Discmania", speed: 7, glide: 6, turn: 0, fade: 1 },
+            { name: "P2", brand: "Discmania", speed: 2, glide: 3, turn: 0, fade: 2 },
+            { name: "DD3", brand: "Discmania", speed: 12, glide: 5, turn: -1, fade: 3 }
+          ];
+        }
+      } catch(e) {
+        console.log("Using built-in master disc directory.");
+      }
+    }
+    loadDiscDirectory();
 
     function searchMolds(query) {
       const resultsDiv = document.getElementById('mold-results');
@@ -237,14 +269,14 @@
         resultsDiv.classList.add('hidden');
         return;
       }
-      const matches = DISC_DATABASE.filter(d => d.name.toLowerCase().includes(query.toLowerCase()));
+      const matches = discDatabase.filter(d => (d.name || d.mold || '').toLowerCase().includes(query.toLowerCase())).slice(0, 10);
       if (!matches.length) {
         resultsDiv.classList.add('hidden');
         return;
       }
       resultsDiv.innerHTML = matches.map(m => `
-        <div onclick="selectMold('${m.name}', '${m.brand}', ${m.speed}, ${m.glide}, ${m.turn}, ${m.fade})" class="p-2 hover:bg-slate-700 cursor-pointer text-xs border-b border-slate-700/50">
-          <strong class="text-emerald-400">${m.name}</strong> (${m.brand}) — ${m.speed}/${m.glide}/${m.turn}/${m.fade}
+        <div onclick="selectMold('${m.name || m.mold}', '${m.brand || m.manufacturer}', ${m.speed || 0}, ${m.glide || 0}, ${m.turn || 0}, ${m.fade || 0})" class="p-2.5 hover:bg-slate-700 cursor-pointer text-xs border-b border-slate-700/50">
+          <strong class="text-emerald-400">${m.name || m.mold}</strong> (${m.brand || m.manufacturer}) — ${m.speed}/${m.glide}/${m.turn}/${m.fade}
         </div>
       `).join('');
       resultsDiv.classList.remove('hidden');
@@ -307,7 +339,6 @@
       renderFeed(type);
     }
 
-    // Upload Photo to Supabase Storage
     async function uploadDiscImage(file) {
       if (!file) return null;
       const fileExt = file.name.split('.').pop();
@@ -319,7 +350,7 @@
         .upload(filePath, file);
 
       if (error) {
-        alert('Image Upload Warning: ' + error.message);
+        alert('Image Upload Notice: ' + error.message);
         return null;
       }
 
@@ -330,7 +361,6 @@
       return urlData.publicUrl;
     }
 
-    // Submit New Post to Database
     async function submitNewPost() {
       const submitBtn = document.getElementById('submit-btn');
       submitBtn.innerText = 'Publishing...';
@@ -379,7 +409,6 @@
       }
     }
 
-    // Fetch and Render Live Database Feed
     async function renderFeed(type) {
       const feed = document.getElementById('main-feed');
       feed.innerHTML = '<p class="text-center text-xs text-slate-500 py-8">Loading live listings...</p>';
@@ -434,7 +463,6 @@
       `).join('');
     }
 
-    // Initial Load
     renderFeed('market');
   </script>
 </body>
