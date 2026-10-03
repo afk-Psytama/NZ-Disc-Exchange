@@ -48,13 +48,13 @@
     <div class="text-center text-xs text-slate-500 py-8">Loading listings from database...</div>
   </main>
 
-  <!-- MODAL: Account & Profile Settings -->
+  <!-- MODAL: Account Settings -->
   <div id="account-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 z-50">
     <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 max-h-[85vh] overflow-y-auto mt-12 sm:mt-0 space-y-4">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
         <div>
           <h2 class="text-base font-bold text-white">Account & Profile Settings</h2>
-          <p class="text-[11px] text-slate-400">Manage defaults and auto-fill preferences</p>
+          <p class="text-[11px] text-slate-400">Manage defaults and preferences</p>
         </div>
         <button onclick="toggleModal('account-modal')" class="text-slate-400 text-lg">✕</button>
       </div>
@@ -66,43 +66,28 @@
         </div>
 
         <div>
-          <label class="text-[11px] text-slate-400 font-semibold uppercase">City / Town (For Pickups & Listings)</label>
+          <label class="text-[11px] text-slate-400 font-semibold uppercase">City / Town</label>
           <input type="text" id="acc-city" placeholder="e.g. Wellington / Lower Hutt" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" required>
         </div>
 
         <div class="border-t border-slate-800 pt-3 space-y-2">
-          <label class="text-[11px] text-emerald-400 font-bold uppercase block">⚡ Listing Auto-Fill Preferences</label>
-          
-          <div>
-            <label class="text-[11px] text-slate-400 font-semibold uppercase">Default Handover Option</label>
-            <select id="acc-default-handover" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500">
-              <option value="both">Both Available (Shipping or Pickup)</option>
-              <option value="shipping">Shipping Only</option>
-              <option value="pickup">Pickup Only</option>
-            </select>
-            <p class="text-[10px] text-slate-500 mt-1">This preference will automatically pre-select when you create a new listing.</p>
-          </div>
-        </div>
-
-        <div class="border-t border-slate-800 pt-3 space-y-2">
-          <label class="text-[11px] text-slate-400 font-semibold uppercase block">NZ Bank Details (For Winning Auctions/Sales)</label>
+          <label class="text-[11px] text-slate-400 font-semibold uppercase block">NZ Bank Details</label>
           <input type="text" id="acc-bank" placeholder="12-3456-7890123-00" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500 font-mono">
         </div>
 
         <button type="submit" class="w-full bg-emerald-500 text-slate-950 font-bold py-2.5 rounded-lg text-xs">
-          Save Profile & Apply Preferences
+          Save Profile
         </button>
       </form>
     </div>
   </div>
 
-  <!-- MODAL 1: Notification Center -->
+  <!-- MODAL: Notification Center -->
   <div id="notification-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 z-50">
     <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 max-h-[85vh] overflow-y-auto mt-12 sm:mt-0">
       <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
         <div>
           <h2 class="text-base font-bold text-white">Notifications</h2>
-          <p class="text-[11px] text-slate-400">Trade records, offers, and bank transfer info</p>
         </div>
         <button onclick="toggleModal('notification-modal')" class="text-slate-400 text-lg">✕</button>
       </div>
@@ -112,14 +97,13 @@
              class="bg-slate-950 p-3 rounded-xl border border-emerald-500/40 hover:border-emerald-500 cursor-pointer transition relative">
           <span class="absolute top-3 right-3 w-2 h-2 bg-emerald-500 rounded-full"></span>
           <p class="text-xs font-bold text-emerald-400">🎉 You won an auction!</p>
-          <p class="text-[11px] text-slate-200 mt-0.5">RPM Kotuku — Tap to view seller's NZ bank account & details.</p>
-          <span class="text-[9px] text-slate-500 mt-1 block">Just now</span>
+          <p class="text-[11px] text-slate-200 mt-0.5">RPM Kotuku — Tap to view seller details.</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL 2: Handover & Bank Details -->
+  <!-- MODAL: Handover Details -->
   <div id="handover-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 space-y-4">
       <div class="flex justify-between items-start">
@@ -131,18 +115,9 @@
       </div>
 
       <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
-        <div class="flex justify-between text-xs text-slate-400">
-          <span>Winning Price:</span>
-          <span class="text-white" id="h-price">$18.00</span>
-        </div>
-        <div class="flex justify-between text-xs text-slate-400">
-          <span>Standard Courier Shipping:</span>
-          <span class="text-white" id="h-shipping">$10.00</span>
-        </div>
-        <div class="border-t border-slate-800 pt-2 flex justify-between text-sm font-bold">
-          <span class="text-slate-200">Total to Transfer:</span>
-          <span class="text-emerald-400" id="h-total">$28.00</span>
-        </div>
+        <div class="flex justify-between text-xs text-slate-400"><span>Winning Price:</span><span class="text-white" id="h-price">$18.00</span></div>
+        <div class="flex justify-between text-xs text-slate-400"><span>Shipping:</span><span class="text-white" id="h-shipping">$10.00</span></div>
+        <div class="border-t border-slate-800 pt-2 flex justify-between text-sm font-bold"><span class="text-slate-200">Total:</span><span class="text-emerald-400" id="h-total">$28.00</span></div>
       </div>
 
       <div class="bg-emerald-950/30 border border-emerald-500/30 p-3.5 rounded-xl space-y-2">
@@ -151,45 +126,30 @@
           <p><strong>Account Name:</strong> <span id="h-seller-name">Marcus T.</span></p>
           <p class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800 font-mono text-emerald-400 text-xs font-bold">
             <span id="h-bank-acc">12-3456-7890123-00</span>
-            <button onclick="navigator.clipboard.writeText(document.getElementById('h-bank-acc').innerText); alert('Bank account copied!');" class="text-[10px] text-slate-400 hover:text-white uppercase font-sans">Copy</button>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('h-bank-acc').innerText); alert('Copied!');" class="text-[10px] text-slate-400 uppercase font-sans">Copy</button>
           </p>
-          <p><strong>Reference to use:</strong> <span class="text-amber-400 font-mono" id="h-ref">DISC-8492</span></p>
+          <p><strong>Reference:</strong> <span class="text-amber-400 font-mono" id="h-ref">DISC-8492</span></p>
         </div>
       </div>
 
-      <div class="text-xs text-slate-400 space-y-1">
-        <p><strong>Seller Email:</strong> <span class="text-slate-200" id="h-seller-email">marcus@example.com</span></p>
-        <p><strong>Seller Phone:</strong> <span class="text-slate-200" id="h-seller-phone">021-555-0192</span></p>
-      </div>
-
-      <button onclick="toggleModal('handover-modal')" class="w-full bg-slate-800 text-slate-200 font-bold py-2.5 rounded-lg text-xs">
-        Close Window
-      </button>
+      <button onclick="toggleModal('handover-modal')" class="w-full bg-slate-800 text-slate-200 font-bold py-2.5 rounded-lg text-xs">Close</button>
     </div>
   </div>
 
-  <!-- MODAL 3: My Vault -->
+  <!-- MODAL: My Vault -->
   <div id="vault-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
     <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 max-h-[85vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4">
         <div>
           <h2 class="text-base font-bold text-white">My Vault Collection</h2>
-          <p class="text-[11px] text-slate-400">Unlimited personal disc storage</p>
         </div>
         <button onclick="toggleModal('vault-modal')" class="text-slate-400 text-lg">✕</button>
       </div>
-
-      <div id="vault-list" class="space-y-2 mb-4">
-        <p class="text-xs text-slate-500 text-center py-4">No discs saved in your vault yet.</p>
-      </div>
-
-      <button onclick="alert('Vault feature active')" class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs py-2.5 rounded-lg font-semibold">
-        + Add Disc to My Vault
-      </button>
+      <div id="vault-list" class="space-y-2 mb-4"><p class="text-xs text-slate-500 text-center py-4">No discs saved in your vault yet.</p></div>
     </div>
   </div>
 
-  <!-- MODAL 4: Create Post -->
+  <!-- MODAL: Create Post -->
   <div id="create-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
     <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 max-h-[85vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4">
@@ -204,19 +164,24 @@
           <button type="button" id="post-type-iso" onclick="setPostType('iso')" class="w-1/2 py-2 rounded-lg text-slate-400 font-semibold">ISO (Wanted)</button>
         </div>
 
-        <!-- Multi-Photo Upload Area -->
+        <!-- Photo Upload & Accumulator Area -->
         <div class="bg-slate-950 border border-dashed border-emerald-500/50 p-3 rounded-xl text-center space-y-2">
-          <label class="block text-[11px] text-emerald-400 font-bold uppercase">📸 Upload Disc Photos (Select Multiple)</label>
-          <input type="file" id="disc-photo-input" accept="image/*" multiple onchange="previewSelectedPhotos(this)" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400">
+          <label class="block text-[11px] text-emerald-400 font-bold uppercase">📸 Upload Disc Photos</label>
           
+          <input type="file" id="disc-photo-input" accept="image/*" multiple onchange="handleFileSelect(this)" class="hidden">
+          
+          <button type="button" onclick="document.getElementById('disc-photo-input').click()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition">
+            + Add Photos (1 or More)
+          </button>
+
           <!-- Image Preview Thumbnail Grid -->
-          <div id="image-preview-grid" class="grid grid-cols-4 gap-2 pt-1 hidden"></div>
+          <div id="image-preview-grid" class="grid grid-cols-4 gap-2 pt-2 hidden"></div>
         </div>
 
         <!-- Autocomplete Mold Search -->
         <div class="relative">
-          <label class="text-[11px] text-slate-400 font-semibold uppercase">Disc Mold (Searches Master Database)</label>
-          <input type="text" id="disc-search" placeholder="Type 'MD3', 'DD1', 'Destroyer', 'Kotuku'..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" oninput="searchMolds(this.value)" required>
+          <label class="text-[11px] text-slate-400 font-semibold uppercase">Disc Mold</label>
+          <input type="text" id="disc-search" placeholder="Type 'MD3', 'Destroyer', 'Kotuku'..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" oninput="searchMolds(this.value)" required>
           <div id="mold-results" class="hidden absolute left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-lg max-h-48 overflow-y-auto z-50"></div>
         </div>
 
@@ -227,22 +192,22 @@
           </div>
           <div>
             <label class="text-[11px] text-slate-400 font-semibold uppercase">Plastic</label>
-            <input type="text" id="plastic" placeholder="C-Line, Atomic, Star..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white">
+            <input type="text" id="plastic" placeholder="Star, Atomic, C-Line..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white">
           </div>
         </div>
 
-        <!-- Location & Handover Options -->
+        <!-- Location & Explicit Handover Option -->
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="text-[11px] text-slate-400 font-semibold uppercase">City / Town</label>
             <input type="text" id="post-city" placeholder="e.g. Wellington" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white">
           </div>
           <div>
-            <label class="text-[11px] text-slate-400 font-semibold uppercase">Handover Preference</label>
+            <label class="text-[11px] text-slate-400 font-semibold uppercase">Handover Option</label>
             <select id="post-handover" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white">
-              <option value="both">Both Available</option>
-              <option value="shipping">Shipping Only</option>
+              <option value="both" selected>Both (Pickup & Shipping)</option>
               <option value="pickup">Pickup Only</option>
+              <option value="shipping">Shipping Only</option>
             </select>
           </div>
         </div>
@@ -288,8 +253,8 @@
 
         <!-- Description Box -->
         <div>
-          <label class="text-[11px] text-slate-400 font-semibold uppercase">Optional Description / Notes</label>
-          <textarea id="description" rows="3" placeholder="Condition details, dome/flatness, trade interests, pickup locations..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500 mt-1"></textarea>
+          <label class="text-[11px] text-slate-400 font-semibold uppercase">Description / Notes</label>
+          <textarea id="description" rows="3" placeholder="Dome/flatness, pickup locations..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500 mt-1"></textarea>
         </div>
 
         <button type="submit" id="submit-btn" class="w-full bg-emerald-500 text-slate-950 font-bold py-3 rounded-lg text-xs transition mt-2">
@@ -305,6 +270,7 @@
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let isIsoPost = false;
+    let selectedFiles = [];
     let userProfile = JSON.parse(localStorage.getItem('disc_user_profile') || '{}');
 
     function loadProfileToUI() {
@@ -312,7 +278,6 @@
         document.getElementById('account-btn-label').innerText = userProfile.name;
         document.getElementById('acc-name').value = userProfile.name || '';
         document.getElementById('acc-city').value = userProfile.city || '';
-        document.getElementById('acc-default-handover').value = userProfile.handover || 'both';
         document.getElementById('acc-bank').value = userProfile.bank || '';
       }
     }
@@ -321,13 +286,11 @@
       userProfile = {
         name: document.getElementById('acc-name').value,
         city: document.getElementById('acc-city').value,
-        handover: document.getElementById('acc-default-handover').value,
         bank: document.getElementById('acc-bank').value
       };
-
       localStorage.setItem('disc_user_profile', JSON.stringify(userProfile));
       document.getElementById('account-btn-label').innerText = userProfile.name;
-      alert('Account preferences saved!');
+      alert('Account details saved!');
       toggleModal('account-modal');
     }
 
@@ -336,9 +299,6 @@
       { name: "DD1", brand: "Discmania", speed: 11, glide: 5, turn: -1, fade: 2 },
       { name: "DD3", brand: "Discmania", speed: 12, glide: 5, turn: -1, fade: 3 },
       { name: "FD", brand: "Discmania", speed: 7, glide: 6, turn: 0, fade: 1 },
-      { name: "FD3", brand: "Discmania", speed: 9, glide: 4, turn: 0, fade: 3 },
-      { name: "PD", brand: "Discmania", speed: 10, glide: 4, turn: 0, fade: 3 },
-      { name: "P2", brand: "Discmania", speed: 2, glide: 3, turn: 0, fade: 2 },
       { name: "Kotuku", brand: "RPM Discs", speed: 5, glide: 5, turn: 0, fade: 2 },
       { name: "Ruru", brand: "RPM Discs", speed: 3, glide: 3, turn: 0, fade: 1 },
       { name: "Kahu", brand: "RPM Discs", speed: 12, glide: 5, turn: -1, fade: 2 },
@@ -348,7 +308,6 @@
       { name: "Zone", brand: "Discraft", speed: 4, glide: 3, turn: 0, fade: 3 },
       { name: "Berg", brand: "Kastaplast", speed: 1, glide: 1, turn: 0, fade: 2 },
       { name: "Grace", brand: "Latitude 64", speed: 11, glide: 6, turn: -1, fade: 2 },
-      { name: "Glitch", brand: "MVP", speed: 1, glide: 7, turn: 0, fade: 0 },
       { name: "Hex", brand: "Axiom", speed: 5, glide: 5, turn: -1, fade: 1 }
     ];
 
@@ -364,25 +323,43 @@
       }
     }
 
-    function previewSelectedPhotos(input) {
+    function handleFileSelect(input) {
+      if (input.files && input.files.length > 0) {
+        Array.from(input.files).forEach(file => selectedFiles.push(file));
+        input.value = '';
+        renderImagePreviews();
+      }
+    }
+
+    function renderImagePreviews() {
       const previewGrid = document.getElementById('image-preview-grid');
       previewGrid.innerHTML = '';
-      
-      if (input.files && input.files.length > 0) {
-        previewGrid.classList.remove('hidden');
-        Array.from(input.files).forEach(file => {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.className = 'w-full h-16 object-cover rounded-lg border border-slate-700';
-            previewGrid.appendChild(img);
-          }
-          reader.readAsDataURL(file);
-        });
-      } else {
+
+      if (selectedFiles.length === 0) {
         previewGrid.classList.add('hidden');
+        return;
       }
+
+      previewGrid.classList.remove('hidden');
+
+      selectedFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const container = document.createElement('div');
+          container.className = 'relative group';
+          container.innerHTML = `
+            <img src="${e.target.result}" class="w-full h-16 object-cover rounded-lg border border-slate-700">
+            <button type="button" onclick="removePhoto(${index})" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-md">✕</button>
+          `;
+          previewGrid.appendChild(container);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function removePhoto(index) {
+      selectedFiles.splice(index, 1);
+      renderImagePreviews();
     }
 
     function searchMolds(query) {
@@ -391,14 +368,11 @@
         resultsDiv.classList.add('hidden');
         return;
       }
-      
       const matches = builtInDiscs.filter(d => d.name.toLowerCase().includes(query.toLowerCase())).slice(0, 10);
-      
       if (!matches.length) {
         resultsDiv.classList.add('hidden');
         return;
       }
-
       resultsDiv.innerHTML = matches.map(m => `
         <div onclick="selectMold('${m.name}', '${m.brand}', ${m.speed}, ${m.glide}, ${m.turn}, ${m.fade})" class="p-2.5 hover:bg-slate-700 cursor-pointer text-xs border-b border-slate-700/50">
           <strong class="text-emerald-400">${m.name}</strong> (${m.brand}) — ${m.speed}/${m.glide}/${m.turn}/${m.fade}
@@ -420,10 +394,8 @@
     function toggleModal(id) {
       const modal = document.getElementById(id);
       modal.classList.toggle('hidden');
-
       if (id === 'create-modal' && !modal.classList.contains('hidden')) {
         if (userProfile.city) document.getElementById('post-city').value = userProfile.city;
-        if (userProfile.handover) document.getElementById('post-handover').value = userProfile.handover;
       }
     }
 
@@ -431,7 +403,6 @@
       isIsoPost = (type === 'iso');
       const btnSale = document.getElementById('post-type-sale');
       const btnIso = document.getElementById('post-type-iso');
-      
       if (isIsoPost) {
         btnIso.className = 'w-1/2 py-2 rounded-lg bg-blue-500 text-slate-950 font-bold';
         btnSale.className = 'w-1/2 py-2 rounded-lg text-slate-400 font-semibold';
@@ -455,8 +426,6 @@
       document.getElementById('h-shipping').innerText = '$' + shipping.toFixed(2);
       document.getElementById('h-total').innerText = '$' + (price + shipping).toFixed(2);
       document.getElementById('h-seller-name').innerText = sellerName;
-      document.getElementById('h-seller-phone').innerText = sellerPhone;
-      document.getElementById('h-seller-email').innerText = sellerEmail;
       document.getElementById('h-bank-acc').innerText = bankAcc;
       document.getElementById('h-ref').innerText = ref;
 
@@ -472,25 +441,15 @@
 
     async function uploadMultipleImages(files) {
       if (!files || files.length === 0) return [];
-      
       const uploadPromises = Array.from(files).map(async (file, index) => {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}_${index}_${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `discs/${fileName}`;
 
-        const { data, error } = await db.storage
-          .from('disc-photos')
-          .upload(filePath, file);
+        const { data, error } = await db.storage.from('disc-photos').upload(filePath, file);
+        if (error) return null;
 
-        if (error) {
-          console.error("Upload error:", error);
-          return null;
-        }
-
-        const { data: urlData } = db.storage
-          .from('disc-photos')
-          .getPublicUrl(filePath);
-
+        const { data: urlData } = db.storage.from('disc-photos').getPublicUrl(filePath);
         return urlData.publicUrl;
       });
 
@@ -503,11 +462,9 @@
       submitBtn.innerText = 'Publishing Images & Post...';
       submitBtn.disabled = true;
 
-      const fileInput = document.getElementById('disc-photo-input');
       let imageUrls = [];
-
-      if (fileInput && fileInput.files.length > 0) {
-        imageUrls = await uploadMultipleImages(fileInput.files);
+      if (selectedFiles.length > 0) {
+        imageUrls = await uploadMultipleImages(selectedFiles);
       }
 
       const moldName = document.getElementById('disc-search').value;
@@ -521,7 +478,7 @@
         brand: brandName,
         plastic: document.getElementById('plastic').value || 'Standard',
         city_town: document.getElementById('post-city').value || userProfile.city || 'NZ Wide',
-        shipping_option: document.getElementById('post-handover').value || userProfile.handover || 'both',
+        shipping_option: document.getElementById('post-handover').value,
         weight_grams: weightVal,
         condition_rating: parseInt(document.getElementById('condition_rating').value) || null,
         speed: parseInt(document.getElementById('speed').value) || null,
@@ -545,8 +502,8 @@
       } else {
         alert('Post published successfully!');
         document.getElementById('create-form').reset();
-        document.getElementById('image-preview-grid').innerHTML = '';
-        document.getElementById('image-preview-grid').classList.add('hidden');
+        selectedFiles = [];
+        renderImagePreviews();
         toggleWeightUnknown(false);
         toggleModal('create-modal');
         renderFeed(isIsoPost ? 'iso' : 'market');
@@ -568,7 +525,7 @@
       const filteredListings = (listings || []).filter(item => Boolean(item.is_iso) === isIso);
 
       if (!filteredListings || filteredListings.length === 0) {
-        feed.innerHTML = `<p class="text-xs text-slate-500 text-center py-8">No ${isIso ? 'ISO requests' : 'discs for sale'} yet. Tap <strong>+ Post</strong> to add the first one!</p>`;
+        feed.innerHTML = `<p class="text-xs text-slate-500 text-center py-8">No ${isIso ? 'ISO requests' : 'discs for sale'} yet.</p>`;
         return;
       }
 
@@ -602,7 +559,7 @@
 
           <div class="text-[11px] text-slate-400 flex justify-between items-center bg-slate-950/40 p-2 rounded-lg border border-slate-800/50">
             <span>📍 ${disc.city_town || 'NZ Wide'}</span>
-            <span class="capitalize">🚚 ${disc.shipping_option || 'Shipping or Pickup'}</span>
+            <span class="capitalize">🚚 ${disc.shipping_option || 'both'}</span>
           </div>
 
           ${disc.description ? `<p class="text-xs text-slate-300 bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80 leading-relaxed">${disc.description}</p>` : ''}
