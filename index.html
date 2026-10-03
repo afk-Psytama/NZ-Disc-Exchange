@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NZ Disc Golf Exchange</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .tab-active { border-bottom: 2px solid #10b981; color: #10b981; font-weight: 700; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-24 font-sans">
+
+  <!-- Header -->
+  <header class="sticky top-0 bg-slate-900/95 backdrop-blur border-b border-slate-800 p-4 z-40 flex justify-between items-center">
+    <div>
+      <h1 class="text-lg font-black text-emerald-400 tracking-tight">NZ DISC GOLF <span class="text-slate-200">EXCHANGE</span></h1>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <!-- Notification Center Bell -->
+      <button onclick="toggleModal('notification-modal')" class="relative bg-slate-800 border border-slate-700 p-2 rounded-xl text-slate-200">
+        🔔
+        <span id="notif-badge" class="absolute -top-1 -right-1 bg-emerald-500 text-slate-950 text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">1</span>
+      </button>
+
+      <button onclick="toggleModal('vault-modal')" class="bg-slate-800 border border-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg text-xs font-semibold">
+        My Vault
+      </button>
+      <button onclick="toggleModal('create-modal')" class="bg-emerald-500 text-slate-950 px-3 py-1.5 rounded-lg text-xs font-bold">
+        + Post
+      </button>
+    </div>
+  </header>
+
+  <!-- Feed Mode Switcher -->
+  <nav class="bg-slate-900 border-b border-slate-800 flex text-center text-xs text-slate-400 font-medium">
+    <button id="tab-market" onclick="switchFeed('market')" class="w-1/2 py-3 tab-active">Marketplace (For Sale/Trade)</button>
+    <button id="tab-iso" onclick="switchFeed('iso')" class="w-1/2 py-3">ISO / Wanted Feed</button>
+  </nav>
+
+  <!-- Main Feed Container -->
+  <main class="max-w-md mx-auto p-4 space-y-4" id="main-feed">
+    <!-- Rendered dynamically -->
+  </main>
+
+  <!-- MODAL 1: Notification Center -->
+  <div id="notification-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 max-h-[85vh] overflow-y-auto mt-12 sm:mt-0">
+      <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
+        <div>
+          <h2 class="text-base font-bold text-white">Notifications</h2>
+          <p class="text-[11px] text-slate-400">Trade records, offers, and bank transfer info</p>
+        </div>
+        <button onclick="toggleModal('notification-modal')" class="text-slate-400 text-lg">✕</button>
+      </div>
+
+      <div id="notifications-list" class="space-y-2">
+        <div onclick="openHandoverDetails('RPM Kotuku - Atomic', 18.00, 10.00, 'Marcus T.', '021-555-0192', 'marcus@example.com', '12-3456-7890123-00', 'DISC-8492'); markRead(this);" 
+             class="bg-slate-950 p-3 rounded-xl border border-emerald-500/40 hover:border-emerald-500 cursor-pointer transition relative">
+          <span class="absolute top-3 right-3 w-2 h-2 bg-emerald-500 rounded-full"></span>
+          <p class="text-xs font-bold text-emerald-400">🎉 You won an auction!</p>
+          <p class="text-[11px] text-slate-200 mt-0.5">RPM Kotuku — Tap to view seller's NZ bank account & details.</p>
+          <span class="text-[9px] text-slate-500 mt-1 block">Just now</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: Re-openable Handover & Bank Details -->
+  <div id="handover-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 space-y-4">
+      <div class="flex justify-between items-start">
+        <div>
+          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Order Confirmation</span>
+          <h3 class="text-base font-bold text-white mt-1" id="h-disc-title">RPM Kotuku</h3>
+        </div>
+        <button onclick="toggleModal('handover-modal')" class="text-slate-400 text-lg">✕</button>
+      </div>
+
+      <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
+        <div class="flex justify-between text-xs text-slate-400">
+          <span>Winning Price:</span>
+          <span class="text-white" id="h-price">$18.00</span>
+        </div>
+        <div class="flex justify-between text-xs text-slate-400">
+          <span>Standard Courier Shipping:</span>
+          <span class="text-white" id="h-shipping">$10.00</span>
+        </div>
+        <div class="border-t border-slate-800 pt-2 flex justify-between text-sm font-bold">
+          <span class="text-slate-200">Total to Transfer:</span>
+          <span class="text-emerald-400" id="h-total">$28.00</span>
+        </div>
+      </div>
+
+      <div class="bg-emerald-950/30 border border-emerald-500/30 p-3.5 rounded-xl space-y-2">
+        <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Seller NZ Banking Details</h4>
+        <div class="text-xs space-y-1 text-slate-300">
+          <p><strong>Account Name:</strong> <span id="h-seller-name">Marcus T.</span></p>
+          <p class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800 font-mono text-emerald-400 text-xs font-bold">
+            <span id="h-bank-acc">12-3456-7890123-00</span>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('h-bank-acc').innerText); alert('Bank account copied!');" class="text-[10px] text-slate-400 hover:text-white uppercase font-sans">Copy</button>
+          </p>
+          <p><strong>Reference to use:</strong> <span class="text-amber-400 font-mono" id="h-ref">DISC-8492</span></p>
+        </div>
+      </div>
+
+      <div class="text-xs text-slate-400 space-y-1">
+        <p><strong>Seller Email:</strong> <span class="text-slate-200" id="h-seller-email">marcus@example.com</span></p>
+        <p><strong>Seller Phone:</strong> <span class="text-slate-200" id="h-seller-phone">021-555-0192</span></p>
+      </div>
+
+      <button onclick="toggleModal('handover-modal')" class="w-full bg-slate-800 text-slate-200 font-bold py-2.5 rounded-lg text-xs">
+        Close Window
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL 3: My Vault -->
+  <div id="vault-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 max-h-[85vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h2 class="text-base font-bold text-white">My Vault Collection</h2>
+          <p class="text-[11px] text-slate-400">Unlimited personal disc storage</p>
+        </div>
+        <button onclick="toggleModal('vault-modal')" class="text-slate-400 text-lg">✕</button>
+      </div>
+
+      <div id="vault-list" class="space-y-2 mb-4">
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+          <div>
+            <p class="text-xs font-bold text-slate-200">Innova Destroyer (175g)</p>
+            <p class="text-[10px] text-slate-400">Star Plastic • Condition 9/10</p>
+          </div>
+          <button onclick="alert('Pre-filling listing creation form from vault item...')" class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded text-[10px] font-semibold">
+            List for Sale
+          </button>
+        </div>
+      </div>
+
+      <button onclick="alert('Feature to add disc record to personal vault')" class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs py-2.5 rounded-lg font-semibold">
+        + Add Disc to My Vault
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL 4: Create Post (Market or ISO) -->
+  <div id="create-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 max-h-[85vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-base font-bold text-white">Create Post</h2>
+        <button onclick="toggleModal('create-modal')" class="text-slate-400 text-lg">✕</button>
+      </div>
+
+      <form id="create-form" class="space-y-3">
+        <!-- Autocomplete Mold Search -->
+        <div class="relative">
+          <label class="text-[11px] text-slate-400 font-semibold uppercase">Disc Mold Search (Auto-fills Brand & Specs)</label>
+          <input type="text" id="disc-search" placeholder="Type 'dest' or 'kotu'..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" oninput="searchMolds(this.value)">
+          <div id="mold-results" class="hidden absolute left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-lg max-h-40 overflow-y-auto z-50"></div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[11px] text-slate-400 font-semibold uppercase">Brand</label>
+            <input type="text" id="brand" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white" required>
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400 font-semibold uppercase">Plastic</label>
+            <input type="text" id="plastic" placeholder="Atomic, Star..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white" required>
+          </div>
+        </div>
+
+        <!-- Flight Specs -->
+        <div class="grid grid-cols-4 gap-1">
+          <div><label class="text-[9px] text-slate-400">SPD</label><input type="number" id="speed" class="w-full bg-slate-950 border border-slate-800 p-2 text-center rounded text-xs"></div>
+          <div><label class="text-[9px] text-slate-400">GLD</label><input type="number" id="glide" class="w-full bg-slate-950 border border-slate-800 p-2 text-center rounded text-xs"></div>
+          <div><label class="text-[9px] text-slate-400">TRN</label><input type="number" id="turn" class="w-full bg-slate-950 border border-slate-800 p-2 text-center rounded text-xs"></div>
+          <div><label class="text-[9px] text-slate-400">FAD</label><input type="number" id="fade" class="w-full bg-slate-950 border border-slate-800 p-2 text-center rounded text-xs"></div>
+        </div>
+
+        <!-- Ink Section -->
+        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="has_ink" onchange="document.getElementById('ink-notes-container').classList.toggle('hidden', !this.checked)" class="accent-emerald-500">
+            <span class="text-xs font-semibold text-slate-300">Disc Has Ink / Markings</span>
+          </label>
+          <div id="ink-notes-container" class="hidden mt-2">
+            <input type="text" placeholder="Optional ink notes (e.g. phone number on flight plate)" class="w-full bg-slate-900 border border-slate-800 p-2 rounded text-xs text-slate-200">
+          </div>
+        </div>
+
+        <!-- Open to Trades Checkbox -->
+        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="wtt_flag" onchange="document.getElementById('wtt-notes-container').classList.toggle('hidden', !this.checked)" class="accent-emerald-500">
+            <span class="text-xs font-semibold text-slate-300">Open to Trades (WTT)</span>
+          </label>
+          <div id="wtt-notes-container" class="hidden mt-2">
+            <input type="text" placeholder="Looking for: e.g. Star Wraith, Kastaplast Berg" class="w-full bg-slate-900 border border-slate-800 p-2 rounded text-xs text-slate-200">
+          </div>
+        </div>
+
+        <button type="button" onclick="toggleModal('create-modal')" class="w-full bg-emerald-500 text-slate-950 font-bold py-3 rounded-lg text-xs transition mt-2">
+          Publish Post
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Config
+    const SUPABASE_URL = 'https://frmxicpmisjtyxiwhnad.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_FtS_bxdhmcK42S4ZGBCazg_WQsUASjp';
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Local Disc Mold Autocomplete DB
+    const DISC_DATABASE = [
+      { name: "Destroyer", brand: "Innova", speed: 12, glide: 5, turn: -1, fade: 3 },
+      { name: "Buzzz", brand: "Discraft", speed: 5, glide: 4, turn: -1, fade: 1 },
+      { name: "Kotuku", brand: "RPM Discs", speed: 5, glide: 5, turn: 0, fade: 2 },
+      { name: "Ruru", brand: "RPM Discs", speed: 3, glide: 3, turn: 0, fade: 1 },
+      { name: "Kahu", brand: "RPM Discs", speed: 12, glide: 5, turn: -1, fade: 2 },
+      { name: "TeeBird", brand: "Innova", speed: 7, glide: 5, turn: 0, fade: 2 }
+    ];
+
+    function searchMolds(query) {
+      const resultsDiv = document.getElementById('mold-results');
+      if (!query || query.length < 2) {
+        resultsDiv.classList.add('hidden');
+        return;
+      }
+      const matches = DISC_DATABASE.filter(d => d.name.toLowerCase().includes(query.toLowerCase()));
+      if (!matches.length) {
+        resultsDiv.classList.add('hidden');
+        return;
+      }
+      resultsDiv.innerHTML = matches.map(m => `
+        <div onclick="selectMold('${m.name}', '${m.brand}', ${m.speed}, ${m.glide}, ${m.turn}, ${m.fade})" class="p-2 hover:bg-slate-700 cursor-pointer text-xs border-b border-slate-700/50">
+          <strong class="text-emerald-400">${m.name}</strong> (${m.brand}) — ${m.speed}/${m.glide}/${m.turn}/${m.fade}
+        </div>
+      `).join('');
+      resultsDiv.classList.remove('hidden');
+    }
+
+    function selectMold(name, brand, s, g, t, f) {
+      document.getElementById('disc-search').value = name;
+      document.getElementById('brand').value = brand;
+      document.getElementById('speed').value = s;
+      document.getElementById('glide').value = g;
+      document.getElementById('turn').value = t;
+      document.getElementById('fade').value = f;
+      document.getElementById('mold-results').classList.add('hidden');
+    }
+
+    function toggleModal(id) {
+      document.getElementById(id).classList.toggle('hidden');
+    }
+
+    function markRead(el) {
+      el.classList.remove('border-emerald-500/40');
+      el.classList.add('border-slate-800', 'opacity-70');
+      const dot = el.querySelector('.bg-emerald-500');
+      if (dot) dot.remove();
+      document.getElementById('notif-badge').style.display = 'none';
+    }
+
+    function openHandoverDetails(title, price, shipping, sellerName, sellerPhone, sellerEmail, bankAcc, ref) {
+      document.getElementById('h-disc-title').innerText = title;
+      document.getElementById('h-price').innerText = '$' + price.toFixed(2);
+      document.getElementById('h-shipping').innerText = '$' + shipping.toFixed(2);
+      document.getElementById('h-total').innerText = '$' + (price + shipping).toFixed(2);
+      document.getElementById('h-seller-name').innerText = sellerName;
+      document.getElementById('h-seller-phone').innerText = sellerPhone;
+      document.getElementById('h-seller-email').innerText = sellerEmail;
+      document.getElementById('h-bank-acc').innerText = bankAcc;
+      document.getElementById('h-ref').innerText = ref;
+
+      document.getElementById('notification-modal').classList.add('hidden');
+      document.getElementById('handover-modal').classList.remove('hidden');
+    }
+
+    function switchFeed(type) {
+      document.getElementById('tab-market').className = type === 'market' ? 'w-1/2 py-3 tab-active' : 'w-1/2 py-3';
+      document.getElementById('tab-iso').className = type === 'iso' ? 'w-1/2 py-3 tab-active' : 'w-1/2 py-3';
+      renderFeed(type);
+    }
+
+    function viewListing(id) {
+      let viewed = JSON.parse(localStorage.getItem('viewed_discs') || '[]');
+      if (!viewed.includes(id)) {
+        viewed.push(id);
+        localStorage.setItem('viewed_discs', JSON.stringify(viewed));
+      }
+    }
+
+    function renderFeed(type) {
+      const feed = document.getElementById('main-feed');
+      if (type === 'market') {
+        feed.innerHTML = `
+          <div onclick="viewListing('demo-1')" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Auction</span>
+                <h3 class="font-bold text-white text-base mt-1">RPM Kotuku - Atomic Plastic</h3>
+              </div>
+              <span class="text-xs text-emerald-400 font-bold">9/10</span>
+            </div>
+
+            <p class="text-xs text-slate-400">5 / 5 / 0 / 2 • 177g • Lower Hutt</p>
+
+            <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 text-[11px] text-amber-300">
+              ⚡ <strong>Open to Trades:</strong> Looking for Firebirds or Glow P2s
+            </div>
+
+            <div class="bg-slate-950 p-2.5 rounded-xl flex justify-between items-center">
+              <div>
+                <p class="text-[9px] text-slate-500 uppercase font-semibold">Current Bid</p>
+                <p class="text-base font-black text-emerald-400">$18.00</p>
+              </div>
+              <div class="text-right text-[10px] text-slate-400">Ends in 4h 12m</div>
+            </div>
+
+            <div class="flex gap-2">
+              <button class="w-1/2 bg-slate-800 text-slate-200 border border-slate-700 py-2 rounded-lg text-xs font-semibold">Propose Trade</button>
+              <button class="w-1/2 bg-emerald-500 text-slate-950 font-bold py-2 rounded-lg text-xs">Bid +$1.00</button>
+            </div>
+
+            <p class="text-[10px] text-slate-500 text-center border-t border-slate-800/80 pt-2">
+              📦 Shipping: Approx. $10.00 standard nationwide courier (combines up to 3 discs)
+            </p>
+          </div>
+        `;
+      } else {
+        feed.innerHTML = `
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">ISO / Wanted</span>
+                <h3 class="font-bold text-white text-base mt-1">ISO: 2021 Sexton Firebird</h3>
+              </div>
+              <span class="text-xs font-bold text-emerald-400">Bounty: ~$45</span>
+            </div>
+
+            <p class="text-xs text-slate-300">Looking for new or lightly used (8+/10). Bright teal/blue preferred. Have cash or trades ready.</p>
+            <p class="text-[10px] text-slate-500">Posted by: Alex M. • Christchurch</p>
+
+            <button onclick="alert('Opens listing creation pre-filled to offer this buyer')" class="w-full bg-emerald-500 text-slate-950 font-bold py-2 rounded-lg text-xs">
+              I Have This Disc! (Offer to Buyer)
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // Initial render
+    renderFeed('market');
+  </script>
+</body>
+</html>
