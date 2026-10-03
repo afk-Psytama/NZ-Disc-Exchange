@@ -19,6 +19,10 @@
     </div>
     
     <div class="flex items-center gap-2">
+      <button onclick="toggleModal('account-modal')" class="bg-slate-800 border border-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
+        👤 <span id="account-btn-label">Account</span>
+      </button>
+
       <button onclick="toggleModal('notification-modal')" class="relative bg-slate-800 border border-slate-700 p-2 rounded-xl text-slate-200">
         🔔
         <span id="notif-badge" class="absolute -top-1 -right-1 bg-emerald-500 text-slate-950 text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">1</span>
@@ -43,6 +47,54 @@
   <main class="max-w-md mx-auto p-4 space-y-4" id="main-feed">
     <div class="text-center text-xs text-slate-500 py-8">Loading listings from database...</div>
   </main>
+
+  <!-- MODAL: Account & Profile Settings -->
+  <div id="account-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 max-h-[85vh] overflow-y-auto mt-12 sm:mt-0 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div>
+          <h2 class="text-base font-bold text-white">Account & Profile Settings</h2>
+          <p class="text-[11px] text-slate-400">Manage defaults and auto-fill preferences</p>
+        </div>
+        <button onclick="toggleModal('account-modal')" class="text-slate-400 text-lg">✕</button>
+      </div>
+
+      <form id="account-form" onsubmit="event.preventDefault(); saveAccountProfile();" class="space-y-3">
+        <div>
+          <label class="text-[11px] text-slate-400 font-semibold uppercase">Full Name / Username</label>
+          <input type="text" id="acc-name" placeholder="e.g. Alex M." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" required>
+        </div>
+
+        <div>
+          <label class="text-[11px] text-slate-400 font-semibold uppercase">City / Town (For Pickups & Listings)</label>
+          <input type="text" id="acc-city" placeholder="e.g. Wellington / Lower Hutt" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" required>
+        </div>
+
+        <div class="border-t border-slate-800 pt-3 space-y-2">
+          <label class="text-[11px] text-emerald-400 font-bold uppercase block">⚡ Listing Auto-Fill Preferences</label>
+          
+          <div>
+            <label class="text-[11px] text-slate-400 font-semibold uppercase">Default Handover Option</label>
+            <select id="acc-default-handover" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500">
+              <option value="both">Both Available (Shipping or Pickup)</option>
+              <option value="shipping">Shipping Only</option>
+              <option value="pickup">Pickup Only</option>
+            </select>
+            <p class="text-[10px] text-slate-500 mt-1">This preference will automatically pre-select when you create a new listing.</p>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-800 pt-3 space-y-2">
+          <label class="text-[11px] text-slate-400 font-semibold uppercase block">NZ Bank Details (For Winning Auctions/Sales)</label>
+          <input type="text" id="acc-bank" placeholder="12-3456-7890123-00" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500 font-mono">
+        </div>
+
+        <button type="submit" class="w-full bg-emerald-500 text-slate-950 font-bold py-2.5 rounded-lg text-xs">
+          Save Profile & Apply Preferences
+        </button>
+      </form>
+    </div>
+  </div>
 
   <!-- MODAL 1: Notification Center -->
   <div id="notification-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 z-50">
@@ -152,10 +204,13 @@
           <button type="button" id="post-type-iso" onclick="setPostType('iso')" class="w-1/2 py-2 rounded-lg text-slate-400 font-semibold">ISO (Wanted)</button>
         </div>
 
-        <!-- Multiple Disc Photo Upload Slot -->
-        <div class="bg-slate-950 border border-dashed border-emerald-500/50 p-3 rounded-xl text-center">
-          <label class="block text-[11px] text-emerald-400 font-bold uppercase mb-1">📸 Upload Disc Photos (Multiple Allowed)</label>
-          <input type="file" id="disc-photo-input" accept="image/*" multiple class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400">
+        <!-- Multi-Photo Upload Area -->
+        <div class="bg-slate-950 border border-dashed border-emerald-500/50 p-3 rounded-xl text-center space-y-2">
+          <label class="block text-[11px] text-emerald-400 font-bold uppercase">📸 Upload Disc Photos (Select Multiple)</label>
+          <input type="file" id="disc-photo-input" accept="image/*" multiple onchange="previewSelectedPhotos(this)" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400">
+          
+          <!-- Image Preview Thumbnail Grid -->
+          <div id="image-preview-grid" class="grid grid-cols-4 gap-2 pt-1 hidden"></div>
         </div>
 
         <!-- Autocomplete Mold Search -->
@@ -173,6 +228,22 @@
           <div>
             <label class="text-[11px] text-slate-400 font-semibold uppercase">Plastic</label>
             <input type="text" id="plastic" placeholder="C-Line, Atomic, Star..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white">
+          </div>
+        </div>
+
+        <!-- Location & Handover Options -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[11px] text-slate-400 font-semibold uppercase">City / Town</label>
+            <input type="text" id="post-city" placeholder="e.g. Wellington" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white">
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400 font-semibold uppercase">Handover Preference</label>
+            <select id="post-handover" class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white">
+              <option value="both">Both Available</option>
+              <option value="shipping">Shipping Only</option>
+              <option value="pickup">Pickup Only</option>
+            </select>
           </div>
         </div>
 
@@ -215,7 +286,7 @@
           </label>
         </div>
 
-        <!-- Optional Description Box -->
+        <!-- Description Box -->
         <div>
           <label class="text-[11px] text-slate-400 font-semibold uppercase">Optional Description / Notes</label>
           <textarea id="description" rows="3" placeholder="Condition details, dome/flatness, trade interests, pickup locations..." class="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500 mt-1"></textarea>
@@ -234,6 +305,31 @@
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let isIsoPost = false;
+    let userProfile = JSON.parse(localStorage.getItem('disc_user_profile') || '{}');
+
+    function loadProfileToUI() {
+      if (userProfile.name) {
+        document.getElementById('account-btn-label').innerText = userProfile.name;
+        document.getElementById('acc-name').value = userProfile.name || '';
+        document.getElementById('acc-city').value = userProfile.city || '';
+        document.getElementById('acc-default-handover').value = userProfile.handover || 'both';
+        document.getElementById('acc-bank').value = userProfile.bank || '';
+      }
+    }
+
+    function saveAccountProfile() {
+      userProfile = {
+        name: document.getElementById('acc-name').value,
+        city: document.getElementById('acc-city').value,
+        handover: document.getElementById('acc-default-handover').value,
+        bank: document.getElementById('acc-bank').value
+      };
+
+      localStorage.setItem('disc_user_profile', JSON.stringify(userProfile));
+      document.getElementById('account-btn-label').innerText = userProfile.name;
+      alert('Account preferences saved!');
+      toggleModal('account-modal');
+    }
 
     const builtInDiscs = [
       { name: "MD3", brand: "Discmania", speed: 5, glide: 5, turn: 0, fade: 2 },
@@ -265,6 +361,27 @@
       } else {
         weightInput.disabled = false;
         weightInput.classList.remove('opacity-50');
+      }
+    }
+
+    function previewSelectedPhotos(input) {
+      const previewGrid = document.getElementById('image-preview-grid');
+      previewGrid.innerHTML = '';
+      
+      if (input.files && input.files.length > 0) {
+        previewGrid.classList.remove('hidden');
+        Array.from(input.files).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.className = 'w-full h-16 object-cover rounded-lg border border-slate-700';
+            previewGrid.appendChild(img);
+          }
+          reader.readAsDataURL(file);
+        });
+      } else {
+        previewGrid.classList.add('hidden');
       }
     }
 
@@ -301,7 +418,13 @@
     }
 
     function toggleModal(id) {
-      document.getElementById(id).classList.toggle('hidden');
+      const modal = document.getElementById(id);
+      modal.classList.toggle('hidden');
+
+      if (id === 'create-modal' && !modal.classList.contains('hidden')) {
+        if (userProfile.city) document.getElementById('post-city').value = userProfile.city;
+        if (userProfile.handover) document.getElementById('post-handover').value = userProfile.handover;
+      }
     }
 
     function setPostType(type) {
@@ -349,31 +472,35 @@
 
     async function uploadMultipleImages(files) {
       if (!files || files.length === 0) return [];
-      const uploadedUrls = [];
-
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+      
+      const uploadPromises = Array.from(files).map(async (file, index) => {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}_${i}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const fileName = `${Date.now()}_${index}_${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `discs/${fileName}`;
 
         const { data, error } = await db.storage
           .from('disc-photos')
           .upload(filePath, file);
 
-        if (!error) {
-          const { data: urlData } = db.storage
-            .from('disc-photos')
-            .getPublicUrl(filePath);
-          uploadedUrls.push(urlData.publicUrl);
+        if (error) {
+          console.error("Upload error:", error);
+          return null;
         }
-      }
-      return uploadedUrls;
+
+        const { data: urlData } = db.storage
+          .from('disc-photos')
+          .getPublicUrl(filePath);
+
+        return urlData.publicUrl;
+      });
+
+      const results = await Promise.all(uploadPromises);
+      return results.filter(url => url !== null);
     }
 
     async function submitNewPost() {
       const submitBtn = document.getElementById('submit-btn');
-      submitBtn.innerText = 'Publishing...';
+      submitBtn.innerText = 'Publishing Images & Post...';
       submitBtn.disabled = true;
 
       const fileInput = document.getElementById('disc-photo-input');
@@ -393,6 +520,8 @@
         title: `${brandName} ${moldName}`,
         brand: brandName,
         plastic: document.getElementById('plastic').value || 'Standard',
+        city_town: document.getElementById('post-city').value || userProfile.city || 'NZ Wide',
+        shipping_option: document.getElementById('post-handover').value || userProfile.handover || 'both',
         weight_grams: weightVal,
         condition_rating: parseInt(document.getElementById('condition_rating').value) || null,
         speed: parseInt(document.getElementById('speed').value) || null,
@@ -416,6 +545,8 @@
       } else {
         alert('Post published successfully!');
         document.getElementById('create-form').reset();
+        document.getElementById('image-preview-grid').innerHTML = '';
+        document.getElementById('image-preview-grid').classList.add('hidden');
         toggleWeightUnknown(false);
         toggleModal('create-modal');
         renderFeed(isIsoPost ? 'iso' : 'market');
@@ -454,8 +585,8 @@
           </div>
 
           ${disc.images && disc.images.length > 0 ? `
-            <div class="flex gap-2 overflow-x-auto pb-1">
-              ${disc.images.map(imgUrl => `<img src="${imgUrl}" class="w-full h-48 object-cover rounded-xl border border-slate-800 flex-shrink-0" alt="Disc photo">`).join('')}
+            <div class="flex gap-2 overflow-x-auto pb-1 snap-x">
+              ${disc.images.map(imgUrl => `<img src="${imgUrl}" class="w-full max-w-[280px] h-48 object-cover rounded-xl border border-slate-800 flex-shrink-0 snap-center" alt="Disc photo">`).join('')}
             </div>
           ` : ''}
 
@@ -467,6 +598,11 @@
             <span>${disc.condition_rating ? 'Cond: ' + disc.condition_rating + '/10' : 'Condition N/A'}</span>
             <span>•</span>
             <span>${disc.has_ink ? '⚠️ Has Ink' : 'No Ink'}</span>
+          </div>
+
+          <div class="text-[11px] text-slate-400 flex justify-between items-center bg-slate-950/40 p-2 rounded-lg border border-slate-800/50">
+            <span>📍 ${disc.city_town || 'NZ Wide'}</span>
+            <span class="capitalize">🚚 ${disc.shipping_option || 'Shipping or Pickup'}</span>
           </div>
 
           ${disc.description ? `<p class="text-xs text-slate-300 bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80 leading-relaxed">${disc.description}</p>` : ''}
@@ -486,6 +622,7 @@
       `).join('');
     }
 
+    loadProfileToUI();
     renderFeed('market');
   </script>
 </body>
